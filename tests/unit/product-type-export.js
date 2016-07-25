@@ -65,7 +65,7 @@ describe('product-type import module', () => {
   it('should throw an error if the output folder is not fiven', () => {
     const noConfigOptions = {
       ...options,
-      config: null,
+      config: undefined,
     }
     const createExporter = () => new ProductTypeExport(logger, noConfigOptions)
     expect(createExporter).to.throw()
