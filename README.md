@@ -18,15 +18,6 @@ This library is built to be used in conjunction with [sphere-node-cli](https://g
 The configuration object may contain:
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 
-## Usage with `sphere-node-cli`
-
-You can use the product type export from the command line using the [`sphere-node-cli`](https://github.com/sphereio/sphere-node-cli).
-Then you can export this file using the cli:
-```
-sphere export -t productType -p my-project-key
-```
-You can pass a custom configuration as described above via the `-c` operator followed by a JSON String that represents your configuration
-
 ## Direct usage
 
 If you want more control, you can also use this library directly in JavaScript. To do this you first need to install it:

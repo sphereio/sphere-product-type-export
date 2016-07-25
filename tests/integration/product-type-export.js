@@ -122,8 +122,8 @@ const createProductType = () => ({
           }, {
             key: 'dandelion',
             label: {
-              en: 'Löwenzahn',
-              de: 'Dandelion',
+              en: 'Dandelion',
+              de: 'Löwenzahn',
             },
           }],
         },
