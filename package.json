@@ -44,6 +44,7 @@
     "eslint-plugin-jsx-a11y": "1.5.3",
     "eslint-plugin-react": "5.2.2",
     "ghooks": "1.0.3",
+    "glob": "7.0.5",
     "isparta": "4.0.0",
     "istanbul": "0.4.2",
     "mocha": "2.4.5",
