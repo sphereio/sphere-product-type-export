@@ -27,6 +27,9 @@ describe('product-type import module', () => {
         _doRequest: () => {},
       },
     },
+    config: {
+      outputFolder: 'sample/folder',
+    },
   }
   const logger = {
     trace: console.log,
@@ -57,5 +60,14 @@ describe('product-type import module', () => {
     const actual = JSON.parse(importer.summaryReport())
 
     expect(actual).to.deep.equal(expected)
+  })
+
+  it('should throw an error if the output folder is not fiven', () => {
+    const noConfigOptions = {
+      ...options,
+      config: null,
+    }
+    const createExporter = () => new ProductTypeExport(logger, noConfigOptions)
+    expect(createExporter).to.throw()
   })
 })

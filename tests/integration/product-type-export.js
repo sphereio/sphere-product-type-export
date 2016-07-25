@@ -5,6 +5,7 @@ import { SphereClient } from 'sphere-node-sdk'
 import fs from 'fs'
 import { randomBytes } from 'crypto'
 import glob from 'glob'
+import tempfile from 'tempfile'
 import path from 'path'
 import ProductTypeExport, { sortAttributes } from '../../src/product-type-export'
 import { getSphereClientCredentials } from '../../src/utils'
@@ -170,6 +171,9 @@ describe('productType export module', function integrationTest() {
     ]
   , [])
 
+  const OUTPUT_FOLDER = tempfile()
+  fs.mkdirSync(OUTPUT_FOLDER)
+
   beforeEach((done) => {
     getSphereClientCredentials(PROJECT_KEY)
     .then(sphereCredentials => {
@@ -180,7 +184,10 @@ describe('productType export module', function integrationTest() {
 
       productTypeExport = new ProductTypeExport(
         logger,
-        { sphereClientConfig: options }
+        {
+          sphereClientConfig: options,
+          config: { outputFolder: OUTPUT_FOLDER },
+        }
       )
       deleteAll('productTypes', client)
       .then(() =>
@@ -422,7 +429,7 @@ describe('productType export module', function integrationTest() {
     it('should output a product types and an attributes file', (done) => {
       productTypeExport.run()
       .then(() => {
-        glob(path.resolve(__dirname, '../..', 'output/*'), (err, files) => {
+        glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
           expect(files.length).to.equal(2)
           expect(files[0].split('/').pop()).to.equal('attributes.csv')
           expect(files[1].split('/').pop()).to.equal('products-to-attributes.csv')

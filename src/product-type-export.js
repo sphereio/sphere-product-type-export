@@ -1,5 +1,4 @@
 import { SphereClient } from 'sphere-node-sdk'
-import _ from 'lodash'
 import { createWriteStream, createReadStream } from 'fs'
 import tempWrite from 'temp-write'
 import JSONStream from 'JSONStream'
@@ -135,12 +134,22 @@ const generateAttributeHeader = (keys) =>
 
 export default class ProductTypeImport {
 
-  constructor(logger, { sphereClientConfig, config }) {
+  constructor(logger, { sphereClientConfig, config = {} }) {
     this.logger = logger
     this.client = new SphereClient(sphereClientConfig)
     this.attributeNames = []
 
-    this.config = _.assign({ delimiter: ';' }, config)
+    if (!('outputFolder' in config)) {
+      throw new Error(
+        'Missing output folder. ' +
+        'Please provide a folder to export to using the "outputFolder" option.'
+      )
+    }
+
+    this.config = {
+      delimiter: ';',
+      ...config,
+    }
 
     this.summary = {
       errors: [],
@@ -154,7 +163,7 @@ export default class ProductTypeImport {
   }
 
   run() {
-    // first iteration - only collect information about types and attributes
+    // first iteration - only collect information about attributes
     // > product type names go into the list of product types
     // > all attribute names go into the list of attributes
 
@@ -165,9 +174,9 @@ export default class ProductTypeImport {
     //     using the previously collected list for col pos
     // > attributes.csv
     //   > add a line for every attribute that is not already added
-
+    const { config: { outputFolder } } = this
     const downloadFile = tempWrite.sync(null, 'product-types.json')
-    console.log('downloaded file to', downloadFile)
+    this.logger.debug('downloaded file to', downloadFile)
     return this.downloadProductTypes(downloadFile)
     .then(() => this.collectAttributes(downloadFile))
     .then(({ attributeNames, attributeKeys }) => {
@@ -179,16 +188,16 @@ export default class ProductTypeImport {
       Promise.all([
         this.writeProductTypes(
           productTypes,
-          path.join(__dirname, '../output', 'products-to-attributes.csv')
+          path.join(outputFolder, 'products-to-attributes.csv')
         ),
         this.writeAttributes(
           attributes,
-          path.join(__dirname, '../output', 'attributes.csv')
+          path.join(outputFolder, 'attributes.csv')
         ),
       ])
     )
     .then(() => {
-      console.log('done')
+      this.logger.debug('done')
     })
   }
 
