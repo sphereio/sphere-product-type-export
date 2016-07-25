@@ -23,7 +23,7 @@ The configuration object may contain:
 You can use the product type export from the command line using the [`sphere-node-cli`](https://github.com/sphereio/sphere-node-cli).
 Then you can export this file using the cli:
 ```
-sphere-node-cli -t productTypeExport -p my-project-key
+sphere export -t productType -p my-project-key
 ```
 You can pass a custom configuration as described above via the `-c` operator followed by a JSON String that represents your configuration
 
