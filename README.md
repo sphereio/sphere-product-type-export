@@ -1,4 +1,4 @@
-# sphere-product-type-import
+# sphere-product-type-export
 
 [![Travis][travis-badge]][travis-url]
 [![Codecov][codecov-badge]][codecov-url]
@@ -7,12 +7,12 @@
 [![Commitizen friendly][commitizen-badge]][commitizen-url]
 [![NPM version][npm-image]][npm-url]
 
-A library that helps with importing [product-types](http://dev.commercetools.com/http-api-projects-productTypes.html) into the [Commercetools Platform](http://www.commercetools.com/).  
+A library that helps with exporting [product-types](http://dev.commercetools.com/http-api-projects-productTypes.html) from the [Commercetools Platform](http://www.commercetools.com/).  
 This library is built to be used in conjunction with [sphere-node-cli](https://github.com/sphereio/sphere-node-cli).
 
 ## Features
-- Import product types to your CTP project
-- Pre-validate product types using a [JSON schema](https://github.com/sphereio/sphere-product-type-import/blob/master/src/product-type-import.js#L7)
+- Export product types from your CTP project
+- Creates 2 files - product type / attributes matrix and attributes list - that can be used to reimport product types
 
 ### Configuration
 The configuration object may contain:
@@ -20,20 +20,10 @@ The configuration object may contain:
 
 ## Usage with `sphere-node-cli`
 
-You can use the product type import from the command line using the [`sphere-node-cli`](https://github.com/sphereio/sphere-node-cli).
-In order for the cli to import product types, the file to import from must be JSON and follow the this structure:
+You can use the product type export from the command line using the [`sphere-node-cli`](https://github.com/sphereio/sphere-node-cli).
+Then you can export this file using the cli:
 ```
-{
-  "productTypes": [
-    <product-type>,
-    <product-type>,
-    ...
-  ]
-}
-```
-Then you can import this file using the cli:
-```
-sphere-node-cli -t productType -p my-project-key -f /sample_dir/productTypes.json
+sphere-node-cli -t productTypeExport -p my-project-key
 ```
 You can pass a custom configuration as described above via the `-c` operator followed by a JSON String that represents your configuration
 
@@ -41,11 +31,11 @@ You can pass a custom configuration as described above via the `-c` operator fol
 
 If you want more control, you can also use this library directly in JavaScript. To do this you first need to install it:
 ```
-npm install sphere-product-type-import --save-dev
+npm install sphere-product-type-export --save-dev
 ```
-Then you can use it to import product types like so:
+Then you can use it to export product types like so:
 ```
-import ProductTypeImport from 'sphere-product-type-import'
+export ProductTypeExport from 'sphere-product-type-export'
 
 const productType = {
   name: '<some-name>',
@@ -60,29 +50,29 @@ const config = {
     }
   }
 }
-const productTypeImport = ProductTypeImport(config)
+const productTypeImport = ProductTypeExport(config)
 
-productTypeImport.importProductType(productType)
+productTypeExport.run()
 .then(() => {
-  // done importing the productType
+  // done exporting the productType
   // look at the summary to see errors
   productTypeImport.summary
   // the summary hast the following structure
   // {
   //   errors: [],
-  //   inserted: [<some-name>],
-  //   successfulImports: 1
+  //   exported: [<some-name>],
+  //   successfulExports: 1
   // }
 })
 ```
 
-[travis-badge]: https://img.shields.io/travis/sphereio/sphere-product-type-import.svg?style=flat-square
-[travis-url]: https://travis-ci.org/sphereio/sphere-product-type-import
+[travis-badge]: https://img.shields.io/travis/sphereio/sphere-product-type-export.svg?style=flat-square
+[travis-url]: https://travis-ci.org/sphereio/sphere-product-type-export
 
-[codecov-badge]: https://img.shields.io/codecov/c/github/sphereio/sphere-product-type-import.svg?style=flat-square
-[codecov-url]: https://codecov.io/github/sphereio/sphere-product-type-import
+[codecov-badge]: https://img.shields.io/codecov/c/github/sphereio/sphere-product-type-export.svg?style=flat-square
+[codecov-url]: https://codecov.io/github/sphereio/sphere-product-type-export
 
-[npm-lic-badge]: https://img.shields.io/npm/l/sphere-product-type-import.svg?style=flat-square
+[npm-lic-badge]: https://img.shields.io/npm/l/sphere-product-type-export.svg?style=flat-square
 [npm-lic-url]: http://spdx.org/licenses/MIT
 
 [semantic-release-badge]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square
@@ -91,6 +81,6 @@ productTypeImport.importProductType(productType)
 [commitizen-badge]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=flat-square
 [commitizen-url]: http://commitizen.github.io/cz-cli/
 
-[npm-url]: https://npmjs.org/package/sphere-product-type-import
-[npm-image]: http://img.shields.io/npm/v/sphere-product-type-import.svg?style=flat-square
-[npm-downloads-image]: https://img.shields.io/npm/dt/sphere-product-type-import.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/sphere-product-type-export
+[npm-image]: http://img.shields.io/npm/v/sphere-product-type-export.svg?style=flat-square
+[npm-downloads-image]: https://img.shields.io/npm/dt/sphere-product-type-export.svg?style=flat-square
