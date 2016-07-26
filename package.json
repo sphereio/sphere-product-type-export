@@ -1,6 +1,5 @@
 {
   "name": "sphere-product-type-export",
-  "version": "0.0.0-semantically-released",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
