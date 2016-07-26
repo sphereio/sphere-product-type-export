@@ -138,12 +138,6 @@ const createProductType = () => ({
 })
 
 const PROJECT_KEY = 'sphere-node-sdk-dev'
-const logger = {
-  trace: console.log,
-  debug: console.log,
-  info: console.log,
-  error: console.error,
-}
 const deleteAll = (service, client) =>
   client[service].process(({ body: { results } }) =>
     Promise.all(results.map((productType) =>
@@ -153,7 +147,7 @@ const deleteAll = (service, client) =>
   )
 
 describe('productType export module', function integrationTest() {
-  this.timeout(100000)
+  this.timeout(15000) // 15s
 
   let client
   let productTypeExport
@@ -182,13 +176,10 @@ describe('productType export module', function integrationTest() {
       }
       client = new SphereClient(options)
 
-      productTypeExport = new ProductTypeExport(
-        logger,
-        {
-          sphereClientConfig: options,
-          config: { outputFolder: OUTPUT_FOLDER },
-        }
-      )
+      productTypeExport = new ProductTypeExport({
+        sphereClientConfig: options,
+        config: { outputFolder: OUTPUT_FOLDER },
+      })
       deleteAll('productTypes', client)
       .then(() =>
         Promise.all(mockProductTypes.map(productType =>

@@ -1,9 +1,12 @@
-import { SphereClient } from 'sphere-node-sdk'
-import { createWriteStream, createReadStream } from 'fs'
-import tempWrite from 'temp-write'
-import JSONStream from 'JSONStream'
 import { Readable } from 'stream'
 import path from 'path'
+import { createWriteStream, createReadStream } from 'fs'
+import createDebug from 'debug'
+import tempWrite from 'temp-write'
+import JSONStream from 'JSONStream'
+import { SphereClient } from 'sphere-node-sdk'
+
+const debug = createDebug('product-type-export')
 
 const DEFAULT_ATTRIBUTES = [
   'name',
@@ -134,8 +137,11 @@ const generateAttributeHeader = (keys) =>
 
 export default class ProductTypeImport {
 
-  constructor(logger, { sphereClientConfig, config = {} }) {
-    this.logger = logger
+  // config: {
+  //   outputFolder: ''
+  //   delimiter: ';'
+  // }
+  constructor({ sphereClientConfig, config = {} }) {
     this.client = new SphereClient(sphereClientConfig)
     this.attributeNames = []
 
@@ -176,7 +182,8 @@ export default class ProductTypeImport {
     //   > add a line for every attribute that is not already added
     const { config: { outputFolder } } = this
     const downloadFile = tempWrite.sync(null, 'product-types.json')
-    this.logger.debug('downloaded file to', downloadFile)
+    debug('download file location', downloadFile)
+
     return this.downloadProductTypes(downloadFile)
     .then(() => this.collectAttributes(downloadFile))
     .then(({ attributeNames, attributeKeys }) => {
@@ -196,9 +203,6 @@ export default class ProductTypeImport {
         ),
       ])
     )
-    .then(() => {
-      this.logger.debug('done')
-    })
   }
 
   downloadProductTypes(file) {
@@ -217,6 +221,7 @@ export default class ProductTypeImport {
       return Promise.resolve()
     }).then(() => {
       writeStream.write(']')
+      debug('product types downloaded')
       return Promise.resolve()
     })
   }
@@ -245,6 +250,7 @@ export default class ProductTypeImport {
         })
       })
       productTypesInputStream.on('end', () => {
+        debug('collected %s unique attributes', attributeNames.length)
         resolve({ attributeNames, attributeKeys })
       })
       productTypesInputStream.on('error', reject)

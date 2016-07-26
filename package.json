@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
+  "bin": {
+    "product-type-export": "./bin/product-type-export"
+  },
   "scripts": {
     "check-coverage": "istanbul check-coverage --statements 100 --branches 100 --functions 100 --lines 100",
     "report-coverage": "cat ./coverage/lcov.info | codecov",
@@ -65,9 +68,12 @@
     "babel-polyfill": "6.9.1",
     "JSONStream": "1.1.2",
     "ajv": "4.0.0",
+    "debug": "~2.2.0",
     "ghooks": "1.0.3",
     "lodash": "4.6.1",
+    "minimist": "~1.2.0",
     "sphere-node-sdk": "1.10.1",
+    "sphere-node-utils": "^0.8.1",
     "temp-write": "2.1.0",
     "underscore": "1.8.3",
     "underscore-mixins": "0.1.4"

@@ -31,12 +31,6 @@ describe('product-type import module', () => {
       outputFolder: 'sample/folder',
     },
   }
-  const logger = {
-    trace: console.log,
-    debug: console.log,
-    info: console.log,
-    error: console.error,
-  }
 
   it('should be class', () => {
     const expected = 'function'
@@ -46,18 +40,18 @@ describe('product-type import module', () => {
   })
 
   it('should create a sphere client', () => {
-    const importer = new ProductTypeExport(logger, options)
+    const exporter = new ProductTypeExport(options)
     const expected = SphereClient
-    const actual = importer.client.constructor
+    const actual = exporter.client.constructor
 
     expect(actual).to.equal(expected)
   })
 
   it(`summaryReport should return no errors and no exported product-types
     if no product-types were exported`, () => {
-    const importer = new ProductTypeExport(logger, options)
+    const exporter = new ProductTypeExport(options)
     const expected = { errors: [], exported: [], successfullExports: 0 }
-    const actual = JSON.parse(importer.summaryReport())
+    const actual = JSON.parse(exporter.summaryReport())
 
     expect(actual).to.deep.equal(expected)
   })
@@ -67,7 +61,7 @@ describe('product-type import module', () => {
       ...options,
       config: undefined,
     }
-    const createExporter = () => new ProductTypeExport(logger, noConfigOptions)
+    const createExporter = () => new ProductTypeExport(noConfigOptions)
     expect(createExporter).to.throw()
   })
 })

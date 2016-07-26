@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+/* eslint-disable */
+
+var ProjectCredentialsConfig = require('sphere-node-utils').ProjectCredentialsConfig
+var ProductTypeExport = require('../dist').default
+var argv = require('minimist')(process.argv.slice(2))
+
+// product-type-export -p foo -t xxx -d ';' -o ./output
+var projectKey = argv.p || argv.projectKey
+var accessToken = argv.t || argv.accessToken
+var outputFolder = argv.o || argv.outputFolder
+var delimiter = argv.d || argv.delimiter
+
+// TODO: validate options
+
+ProjectCredentialsConfig.create()
+.then(function (credentials) {
+  var sphereCredentials = credentials.enrichCredentials({
+    project_key: projectKey
+  })
+
+  var exporter = new ProductTypeExport({
+    sphereClientConfig: {
+      config: sphereCredentials,
+      access_token: accessToken,
+    },
+    config: {
+      outputFolder: argv.outputFolder,
+      delimiter: argv.delimiter,
+    },
+  })
+
+  exporter.run()
+  .then(function () {
+    var report = exporter.summaryReport()
+    console.log('Export successful!')
+    console.log(report)
+    process.exit(0)
+  })
+})
+.catch(function (error) {
+  console.error(error.stack || error)
+  process.exit(1)
+})
+

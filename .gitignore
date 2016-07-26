@@ -3,3 +3,5 @@ dist
 coverage
 .DS_store
 output
+.sphere-project-credentials.json
+*.log
