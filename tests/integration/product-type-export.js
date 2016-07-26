@@ -151,6 +151,7 @@ describe('productType export module', function integrationTest() {
 
   let client
   let productTypeExport
+  let sphereClientConfig
   const testProductTypes = Array.from(new Array(5), () => createProductType())
   const mockProductTypes = testProductTypes.map(type => ({
     ...type, attributes: type.attributes.filter(a => !!a),
@@ -165,15 +166,17 @@ describe('productType export module', function integrationTest() {
     ]
   , [])
 
-  const OUTPUT_FOLDER = tempfile()
-  fs.mkdirSync(OUTPUT_FOLDER)
+  let OUTPUT_FOLDER
 
   beforeEach((done) => {
+    OUTPUT_FOLDER = tempfile()
+    fs.mkdirSync(OUTPUT_FOLDER)
     getSphereClientCredentials(PROJECT_KEY)
     .then(sphereCredentials => {
       const options = {
         config: sphereCredentials,
       }
+      sphereClientConfig = options
       client = new SphereClient(options)
 
       productTypeExport = new ProductTypeExport({
@@ -424,6 +427,20 @@ describe('productType export module', function integrationTest() {
           expect(files.length).to.equal(2)
           expect(files[0].split('/').pop()).to.equal('attributes.csv')
           expect(files[1].split('/').pop()).to.equal('products-to-attributes.csv')
+          done()
+        })
+      }).catch(done)
+    })
+    it('should output a zip file', (done) => {
+      const productTypeExportCompress = new ProductTypeExport({
+        sphereClientConfig,
+        config: { outputFolder: OUTPUT_FOLDER, compressOutput: true },
+      })
+      productTypeExportCompress.run()
+      .then(() => {
+        glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
+          expect(files.length).to.equal(1)
+          expect(files[0].split('/').pop()).to.equal('product-types.zip')
           done()
         })
       }).catch(done)

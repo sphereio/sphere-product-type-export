@@ -1,9 +1,12 @@
 import { Readable } from 'stream'
 import path from 'path'
-import { createWriteStream, createReadStream } from 'fs'
+import { createWriteStream, createReadStream, mkdirSync, existsSync } from 'fs'
 import createDebug from 'debug'
+
 import tempWrite from 'temp-write'
+import tempfile from 'tempfile'
 import JSONStream from 'JSONStream'
+import JSZip from 'jszip'
 import { SphereClient } from 'sphere-node-sdk'
 
 const debug = createDebug('product-type-export')
@@ -154,6 +157,7 @@ export default class ProductTypeImport {
 
     this.config = {
       delimiter: ';',
+      compressOutput: false,
       ...config,
     }
 
@@ -180,9 +184,16 @@ export default class ProductTypeImport {
     //     using the previously collected list for col pos
     // > attributes.csv
     //   > add a line for every attribute that is not already added
-    const { config: { outputFolder } } = this
+    const { config: { outputFolder, compressOutput } } = this
     const downloadFile = tempWrite.sync(null, 'product-types.json')
     debug('download file location', downloadFile)
+
+    // if the output should be compressed, the csv files should stored in a temp folder
+    const csvFolder = compressOutput ? tempfile() : outputFolder
+    // create csv folder if it does not exist
+    if (!existsSync(csvFolder)) {
+      mkdirSync(csvFolder)
+    }
 
     return this.downloadProductTypes(downloadFile)
     .then(() => this.collectAttributes(downloadFile))
@@ -195,13 +206,26 @@ export default class ProductTypeImport {
       Promise.all([
         this.writeProductTypes(
           productTypes,
-          path.join(outputFolder, 'products-to-attributes.csv')
+          path.join(csvFolder, 'products-to-attributes.csv')
         ),
         this.writeAttributes(
           attributes,
-          path.join(outputFolder, 'attributes.csv')
+          path.join(csvFolder, 'attributes.csv')
         ),
       ])
+    )
+    .then(() =>
+      (compressOutput ? new Promise((resolve, reject) => {
+        const zip = new JSZip()
+        zip
+        .folder(csvFolder)
+        .generateNodeStream({ streamFiles: true })
+        .pipe(createWriteStream(path.join(outputFolder, 'product-types.zip')))
+        .on('finish', () => {
+          resolve()
+        })
+        .on('error', reject)
+      }) : Promise.resolve())
     )
   }
 
