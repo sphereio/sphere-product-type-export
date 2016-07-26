@@ -16,16 +16,19 @@ var sphereProtocol = argv.sphereProtocol
 
 // TODO: validate options
 
-(accessToken
-  ? Promise.resolve({ project_key: projectKey })
-  : ProjectCredentialsConfig.create()
-    .then(function (credentials) {
-      var sphereCredentials = credentials.enrichCredentials({
-        project_key: projectKey
+function getCredentials () {
+  return accessToken
+    ? Promise.resolve({ project_key: projectKey })
+    : ProjectCredentialsConfig.create()
+      .then(function (credentials) {
+        var sphereCredentials = credentials.enrichCredentials({
+          project_key: projectKey
+        })
+        return sphereCredentials
       })
-      return sphereCredentials
-    })
-)
+}
+
+getCredentials()
 .then(function (sphereCredentials) {
   var exporter = new ProductTypeExport({
     sphereClientConfig: {
