@@ -11,6 +11,8 @@ var accessToken = argv.t || argv.accessToken
 var outputFolder = argv.o || argv.outputFolder
 var delimiter = argv.d || argv.delimiter
 var compressOutput = argv.c || argv.compressOutput
+var sphereHost = argv.sphereHost
+var sphereProtocol = argv.sphereProtocol
 
 // TODO: validate options
 
@@ -24,6 +26,8 @@ ProjectCredentialsConfig.create()
     sphereClientConfig: {
       config: sphereCredentials,
       access_token: accessToken,
+      host: sphereHost,
+      protocol: sphereProtocol,
     },
     config: {
       outputFolder: argv.outputFolder,
