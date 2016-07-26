@@ -1,5 +1,6 @@
 {
   "name": "sphere-product-type-export",
+  "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -15,13 +16,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sphereio/sphere-product-type-import.git"
+    "url": "https://github.com/sphereio/sphere-product-type-export.git"
   },
   "keywords": [
     "ctp",
     "commercetools",
     "product-type",
-    "import"
+    "export"
   ],
   "author": "Philipp Sporrer <philipp.sporrer@commercetools.de>",
   "license": "MIT",
