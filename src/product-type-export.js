@@ -193,7 +193,7 @@ export default class ProductTypeImport {
 
     // if the output should be compressed, the csv files should stored in a temp folder
     const csvFolder = compressOutput ? tempfile() : outputFolder
-    // create csv folder if it does not exist
+    // create folders if they do not exist
     if (!existsSync(csvFolder)) {
       mkdirSync(csvFolder)
     }
@@ -221,7 +221,12 @@ export default class ProductTypeImport {
       (compressOutput ? new Promise((resolve, reject) => {
         const zip = new JSZip()
         zip
-        .folder(csvFolder)
+        .folder('product-type-export')
+        .file(
+          'products-to-attributes.csv',
+          createReadStream(path.join(csvFolder, 'products-to-attributes.csv')
+        ))
+        .file('attributes.csv', createReadStream(path.join(csvFolder, 'attributes.csv')))
         .generateNodeStream({ streamFiles: true })
         .pipe(createWriteStream(path.join(outputFolder, 'product-types.zip')))
         .on('finish', () => {

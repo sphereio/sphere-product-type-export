@@ -30,9 +30,9 @@ ProjectCredentialsConfig.create()
       protocol: sphereProtocol,
     },
     config: {
-      outputFolder: argv.outputFolder,
-      delimiter: argv.delimiter,
-      compressOutput: argv.compressOutput,
+      outputFolder: outputFolder,
+      delimiter: delimiter,
+      compressOutput: compressOutput,
     },
   })
 
