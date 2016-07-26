@@ -10,6 +10,7 @@ var projectKey = argv.p || argv.projectKey
 var accessToken = argv.t || argv.accessToken
 var outputFolder = argv.o || argv.outputFolder
 var delimiter = argv.d || argv.delimiter
+var compressOutput = argv.c || argv.compressOutput
 
 // TODO: validate options
 
@@ -27,6 +28,7 @@ ProjectCredentialsConfig.create()
     config: {
       outputFolder: argv.outputFolder,
       delimiter: argv.delimiter,
+      compressOutput: argv.compressOutput,
     },
   })
 
@@ -42,4 +44,3 @@ ProjectCredentialsConfig.create()
   console.error(error.stack || error)
   process.exit(1)
 })
-

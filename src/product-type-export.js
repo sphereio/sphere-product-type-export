@@ -143,6 +143,7 @@ export default class ProductTypeImport {
   // config: {
   //   outputFolder: ''
   //   delimiter: ';'
+  //   compressOutput: false
   // }
   constructor({ sphereClientConfig, config = {} }) {
     this.client = new SphereClient(sphereClientConfig)
@@ -156,9 +157,9 @@ export default class ProductTypeImport {
     }
 
     this.config = {
-      delimiter: ';',
-      compressOutput: false,
-      ...config,
+      delimiter: config.delimiter || ';',
+      compressOutput: config.compressOutput || false,
+      outputFolder: config.outputFolder,
     }
 
     this.summary = {
