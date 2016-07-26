@@ -164,8 +164,10 @@ export default class ProductTypeImport {
 
     this.summary = {
       errors: [],
-      exported: [],
-      successfullExports: 0,
+      exported: {
+        productTypes: 0,
+        attributes: 0,
+      },
     }
   }
 
@@ -228,6 +230,9 @@ export default class ProductTypeImport {
         .on('error', reject)
       }) : Promise.resolve())
     )
+    .catch(err => {
+      this.summary.errors.push(err)
+    })
   }
 
   downloadProductTypes(file) {
@@ -341,6 +346,7 @@ export default class ProductTypeImport {
         })
         const row = [name, description, ...enabledAttributes].join(delimiter)
         writeStream.write(`${row}\n`)
+        this.summary.exported.productTypes++
       })
       stream.on('end', () => {
         resolve()
@@ -358,6 +364,7 @@ export default class ProductTypeImport {
       const typeWithValuesRegex = /type.values.(.)/
       writeStream.write(`${header.join(delimiter)}\n`)
       stream.on('data', (attribute) => {
+        this.summary.exported.attributes++
         for (let i = 0; i < numberOfRows; i++) {
           const row = keys.map(key => {
             // return enum fields if we are in the corresponding row

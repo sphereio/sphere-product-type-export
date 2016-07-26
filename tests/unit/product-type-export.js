@@ -50,7 +50,7 @@ describe('product-type import module', () => {
   it(`summaryReport should return no errors and no exported product-types
     if no product-types were exported`, () => {
     const exporter = new ProductTypeExport(options)
-    const expected = { errors: [], exported: [], successfullExports: 0 }
+    const expected = { errors: [], exported: { productTypes: 0, attributes: 0 } }
     const actual = JSON.parse(exporter.summaryReport())
 
     expect(actual).to.deep.equal(expected)

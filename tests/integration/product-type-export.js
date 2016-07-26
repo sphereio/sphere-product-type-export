@@ -431,6 +431,31 @@ describe('productType export module', function integrationTest() {
         })
       }).catch(done)
     })
+    it('should generate a report', (done) => {
+      productTypeExport.run()
+      .then(() => {
+        const summary = JSON.parse(productTypeExport.summaryReport())
+        expect(summary.errors).to.deep.equal([])
+        expect(summary.exported).to.deep.equal({
+          productTypes: testProductTypes.length,
+          attributes: mockAttributes.length,
+        })
+        done()
+      }).catch(done)
+    })
+    it('should list all errors in the report', (done) => {
+      productTypeExport.downloadProductTypes = () => Promise.reject('some-error')
+      productTypeExport.run()
+      .then(() => {
+        const summary = JSON.parse(productTypeExport.summaryReport())
+        expect(summary.errors).to.deep.equal(['some-error'])
+        expect(summary.exported).to.deep.equal({
+          productTypes: 0,
+          attributes: 0,
+        })
+        done()
+      }).catch(done)
+    })
     it('should output a zip file', (done) => {
       const productTypeExportCompress = new ProductTypeExport({
         sphereClientConfig,
