@@ -135,6 +135,9 @@ const generateAttributeHeader = (keys) =>
     if (key.match(/type.name/)) {
       return 'type'
     }
+    if (key.match(/inputHint/)) {
+      return 'textInputHint'
+    }
     return key
   }))
 

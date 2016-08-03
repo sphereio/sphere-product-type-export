@@ -375,7 +375,7 @@ describe('productType export module', function integrationTest() {
           })
           expect(row[getColIndex('attributeConstraint')]).to.equal(attributeConstraint)
           if (inputHint) {
-            expect(row[getColIndex('inputHint')]).to.equal(inputHint)
+            expect(row[getColIndex('textInputHint')]).to.equal(inputHint)
           }
           if (displayGroup) {
             expect(row[getColIndex('displayGroup')]).to.equal(displayGroup)
