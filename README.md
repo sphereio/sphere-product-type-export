@@ -24,11 +24,11 @@ The configuration object may contain:
 ## Direct usage
 
 If you want more control, you can also use this library directly in JavaScript. To do this you first need to install it:
-```
+```sh
 npm install sphere-product-type-export --save-dev
 ```
 Then you can use it to export product types like so:
-```
+```js
 export ProductTypeExport from 'sphere-product-type-export'
 
 const productType = {
