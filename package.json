@@ -14,7 +14,7 @@
     "test:ci": "babel-node node_modules/.bin/babel-istanbul cover node_modules/.bin/_mocha -- tests/**/*.js",
     "test:watch": "watch 'npm test' src/ tests/",
     "build": "babel src --out-dir dist",
-    "lint": "eslint src tests",
+    "lint": "./scripts/lint src tests",
     "semantic-release": "semantic-release pre && npm run build && npm publish && semantic-release post",
     "start": "npm run build && node dist"
   },
@@ -55,6 +55,7 @@
     "mocha": "2.4.5",
     "semantic-release": "^4.3.5",
     "sinon": "1.17.3",
+    "validate-commit-msg": "^2.8.0",
     "watch": "0.17.1"
   },
   "babel": {
@@ -87,7 +88,8 @@
       "path": "node_modules/cz-conventional-changelog"
     },
     "ghooks": {
-      "pre-commit": "npm run test:ci && npm run check-coverage"
+      "commit-msg": "validate-commit-msg",
+      "pre-commit": "./scripts/lint-staged-files && npm run test:ci && npm run check-coverage"
     }
   }
 }
