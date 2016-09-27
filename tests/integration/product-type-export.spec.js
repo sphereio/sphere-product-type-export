@@ -7,8 +7,9 @@ import { randomBytes } from 'crypto'
 import glob from 'glob'
 import tempfile from 'tempfile'
 import path from 'path'
+// eslint-disable-next-line max-len
 import ProductTypeExport, { sortAttributes } from '../../src/product-type-export'
-import { getSphereClientCredentials } from '../../src/utils'
+import getSphereClientCredentials from '../../src/utils'
 
 const random = () => !!Math.round(Math.random())
 // const csvRowForType = (type) => {
@@ -140,13 +141,13 @@ const createProductType = () => ({
 const PROJECT_KEY = 'sphere-node-sdk-dev'
 const deleteAll = (service, client) =>
   client[service].process(({ body: { results } }) =>
-    Promise.all(results.map((productType) =>
+    Promise.all(results.map(productType =>
       client[service].byId(productType.id)
       .delete(productType.version)
     ))
   )
 
-describe('productType export module', function integrationTest() {
+describe('productType export module', function integrationTest () {
   this.timeout(15000) // 15s
 
   let client
@@ -172,7 +173,7 @@ describe('productType export module', function integrationTest() {
     OUTPUT_FOLDER = tempfile()
     fs.mkdirSync(OUTPUT_FOLDER)
     getSphereClientCredentials(PROJECT_KEY)
-    .then(sphereCredentials => {
+    .then((sphereCredentials) => {
       const options = {
         config: sphereCredentials,
       }
@@ -206,7 +207,7 @@ describe('productType export module', function integrationTest() {
         const productTypes = JSON.parse(file)
         const actualKeys = productTypes.map(({ key }) => key)
         const expectedKeys = mockProductTypes.map(({ key }) => key)
-        expectedKeys.forEach(key => {
+        expectedKeys.forEach((key) => {
           expect(actualKeys.includes(key)).to.equal(true)
         })
         done()
@@ -231,7 +232,9 @@ describe('productType export module', function integrationTest() {
         })
         productTypes.on('end', () => {
           attributes.on('end', () => {
-            mockProductTypes.forEach(({ name, description, attributes: typeAttrs }) => {
+            mockProductTypes.forEach((
+              { name, description, attributes: typeAttrs }
+            ) => {
               const actualType = actualTypes.find(t => t.name === name)
               expect(!!actualType).to.equal(true)
               expect(actualType).to.deep.equal({
@@ -240,7 +243,7 @@ describe('productType export module', function integrationTest() {
                 attributes: typeAttrs.map(attr => attr.name),
               })
               // all of the types attributes should have been collected
-              typeAttrs.forEach(typeAttr => {
+              typeAttrs.forEach((typeAttr) => {
                 const collectedAttribute = actualAttributes.some(
                   attr => attr.name === typeAttr.name
                 )
@@ -264,8 +267,8 @@ describe('productType export module', function integrationTest() {
       .then(() => productTypeExport.collectAttributes(downloadFolder))
       .then(({ attributeNames, attributeKeys }) => {
         // should have collected all attributes
-        mockProductTypes.forEach(type => {
-          type.attributes.forEach(attr => {
+        mockProductTypes.forEach((type) => {
+          type.attributes.forEach((attr) => {
             expect(attributeNames.includes(attr.name)).to.equal(true)
           })
         })
@@ -296,7 +299,9 @@ describe('productType export module', function integrationTest() {
           'inputHint',
           'displayGroup',
         ]
-        expectedKeys.forEach(attr => expect(attributeKeys.includes(attr)).to.equal(true))
+        expectedKeys.forEach((attr) => {
+          expect(attributeKeys.includes(attr)).to.equal(true)
+        })
         done()
       })
       .catch(done)
@@ -327,9 +332,8 @@ describe('productType export module', function integrationTest() {
         const file = fs.readFileSync(destination, 'utf-8')
         const attributes = productTypeExport.attributeNames.join(',')
         file.split('\n').forEach((row, i) => {
-          if (i === 0) {
-            expect(row).to.equal(`name,description,${attributes}`)
-          }
+          if (i === 0)
+            expect(row).to.equal(`name;description;${attributes}`)
           // only testing the header row, the rest can be unit tested
         })
         done()
@@ -354,9 +358,15 @@ describe('productType export module', function integrationTest() {
       )
       .then(() => {
         const file = fs.readFileSync(destination, 'utf-8').split('\n')
+<<<<<<< 193babadbb8fc5ef82be2ca0a40d325ac24fc516:tests/integration/product-type-export.js
         const header = file[0].split(',')
         const getColIndex = (key) => header.indexOf(key)
         const getRow = (index) => file[index].split(',')
+=======
+        const header = file[0].split(';')
+        const getColIndex = key => header.indexOf(key)
+        const getRow = index => file[index].split(';')
+>>>>>>> style(project): add commercetools-eslint-config:tests/integration/product-type-export.spec.js
         // check if all the product types have been exported
         productTypeExport.attributeNames.reduce((rowIndex, attrName) => {
           const attrDef = mockAttributes.find(mock => mock.name === attrName)
@@ -367,25 +377,30 @@ describe('productType export module', function integrationTest() {
           const row = getRow(rowIndex)
           expect(row[0]).to.equal(name)
           // if the type is a set the element type of the set needs to appended
-          const typeName = type.name === 'set' ? `set:${type.elementType.name}` : type.name
+          const typeName = type.name === 'set' ? `set:${
+            type.elementType.name
+          }` : type.name
+
           expect(row[1]).to.equal(typeName)
           // check for all the localizations of the label
-          Object.keys(label).forEach(locale => {
+          Object.keys(label).forEach((locale) => {
             expect(row[getColIndex(`label.${locale}`)]).to.equal(label[locale])
           })
-          expect(row[getColIndex('attributeConstraint')]).to.equal(attributeConstraint)
-          if (inputHint) {
+          expect(row[getColIndex('attributeConstraint')]).to.equal(
+            attributeConstraint
+          )
+          if (inputHint)
             expect(row[getColIndex('textInputHint')]).to.equal(inputHint)
-          }
-          if (displayGroup) {
+
+          if (displayGroup)
             expect(row[getColIndex('displayGroup')]).to.equal(displayGroup)
-          }
-          if (isRequired) {
+
+          if (isRequired)
             expect(row[getColIndex('isRequired')]).to.equal(isRequired)
-          }
-          if (isSearchable) {
+
+          if (isSearchable)
             expect(row[getColIndex('isSearchable')]).to.equal(isSearchable)
-          }
+
           let additionalRowsForValues = 0
           // check if the type contains multiple values
           if (
@@ -401,14 +416,15 @@ describe('productType export module', function integrationTest() {
               // check for the enum key
               expect(valueRow[getColIndex('enumKey')]).to.equal(attrVal.key)
               // check for enum label
-              if (typeof attrVal.label === 'object') {
-                Object.keys(attrVal.label).forEach(locale => {
+              if (typeof attrVal.label === 'object')
+                return Object.keys(attrVal.label).forEach((locale) => {
                   expect(valueRow[getColIndex(`enumLabel.${locale}`)])
                     .to.equal(attrVal.label[locale])
                 })
-              } else {
-                expect(valueRow[getColIndex('enumLabel')]).to.equal(attrVal.label)
-              }
+
+              return expect(valueRow[
+                getColIndex('enumLabel')
+              ]).to.equal(attrVal.label)
             })
           }
           return rowIndex + additionalRowsForValues + 1
@@ -426,7 +442,9 @@ describe('productType export module', function integrationTest() {
         glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
           expect(files.length).to.equal(2)
           expect(files[0].split('/').pop()).to.equal('attributes.csv')
-          expect(files[1].split('/').pop()).to.equal('products-to-attributes.csv')
+          expect(files[1].split('/').pop()).to.equal(
+            'products-to-attributes.csv'
+          )
           done()
         })
       }).catch(done)
@@ -444,7 +462,9 @@ describe('productType export module', function integrationTest() {
       }).catch(done)
     })
     it('should list all errors in the report', (done) => {
-      productTypeExport.downloadProductTypes = () => Promise.reject('some-error')
+      productTypeExport.downloadProductTypes = () => Promise.reject(
+        'some-error'
+      )
       productTypeExport.run()
       .then(() => {
         const summary = JSON.parse(productTypeExport.summaryReport())

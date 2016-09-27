@@ -1,6 +1,6 @@
+import { SphereClient } from 'sphere-node-sdk'
 import { expect } from 'chai'
 import ProductTypeExport from '../../src'
-import { SphereClient } from 'sphere-node-sdk'
 
 const PROJECT_KEY = 'sphere-node-product-type-import'
 
@@ -50,7 +50,13 @@ describe('product-type import module', () => {
   it(`summaryReport should return no errors and no exported product-types
     if no product-types were exported`, () => {
     const exporter = new ProductTypeExport(options)
-    const expected = { errors: [], exported: { productTypes: 0, attributes: 0 } }
+    const expected = {
+      errors: [],
+      exported: {
+        productTypes: 0,
+        attributes: 0,
+      },
+    }
     const actual = JSON.parse(exporter.summaryReport())
 
     expect(actual).to.deep.equal(expected)
