@@ -14,7 +14,7 @@
     "test": "cross-env NODE_ENV=test babel-node node_modules/.bin/tape tests/**/*.spec.js | tap-spec",
     "test:ci": " npm run clean && babel-node node_modules/.bin/babel-istanbul cover node_modules/.bin/tape -- tests/**/*.js",
     "test:watch": "watch 'npm test' src/ tests/",
-    "build": "babel src --out-dir dist",
+    "build": "npm run clean && babel src --out-dir dist",
     "lint": "./scripts/lint src tests",
     "semantic-release": "semantic-release pre && npm run build && npm publish && semantic-release post",
     "start": "npm run build && node dist"
