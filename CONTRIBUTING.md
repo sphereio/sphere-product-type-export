@@ -21,7 +21,7 @@ Table of Contents
 Clone this repository
 
 ```bash
-$ git clone https://github.com/sphereio/sphere-product-type-import.git
+$ git clone https://github.com/sphereio/sphere-product-type-export.git
 ```
 
 ## Running
