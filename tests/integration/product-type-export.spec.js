@@ -1,6 +1,6 @@
 import 'babel-polyfill'
+import test from 'tape'
 import tempWrite from 'temp-write'
-import { expect } from 'chai'
 import { SphereClient } from 'sphere-node-sdk'
 import fs from 'fs'
 import { randomBytes } from 'crypto'
@@ -138,7 +138,7 @@ const createProductType = () => ({
   ],
 })
 
-const PROJECT_KEY = 'sphere-node-sdk-dev'
+const PROJECT_KEY = 'abimbola-dev-test'
 const deleteAll = (service, client) =>
   client[service].process(({ body: { results } }) =>
     Promise.all(results.map(productType =>
@@ -147,348 +147,358 @@ const deleteAll = (service, client) =>
     ))
   )
 
-describe('productType export module', function integrationTest () {
-  this.timeout(15000) // 15s
+let client
+let productTypeExport
+let sphereClientConfig
+const testProductTypes = Array.from(new Array(5), () => createProductType())
+const mockProductTypes = testProductTypes.map(type => ({
+  ...type, attributes: type.attributes.filter(a => !!a),
+}))
+const mockAttributes = mockProductTypes.reduce((attributes, type) =>
+  [
+    ...type.attributes.filter(attr =>
+      // filter out already collected attributes
+      !attributes.some(existingAttr => existingAttr.name === attr.name)
+    ),
+    ...attributes,
+  ]
+, [])
 
-  let client
-  let productTypeExport
-  let sphereClientConfig
-  const testProductTypes = Array.from(new Array(5), () => createProductType())
-  const mockProductTypes = testProductTypes.map(type => ({
-    ...type, attributes: type.attributes.filter(a => !!a),
-  }))
-  const mockAttributes = mockProductTypes.reduce((attributes, type) =>
-    [
-      ...type.attributes.filter(attr =>
-        // filter out already collected attributes
-        !attributes.some(existingAttr => existingAttr.name === attr.name)
-      ),
-      ...attributes,
-    ]
-  , [])
+let OUTPUT_FOLDER
 
-  let OUTPUT_FOLDER
+const before = function setup () {
+  OUTPUT_FOLDER = tempfile()
+  fs.mkdirSync(OUTPUT_FOLDER)
+  return getSphereClientCredentials(PROJECT_KEY)
+  .then((sphereCredentials) => {
+    const options = {
+      config: sphereCredentials,
+    }
+    sphereClientConfig = options
+    client = new SphereClient(options)
 
-  beforeEach((done) => {
-    OUTPUT_FOLDER = tempfile()
-    fs.mkdirSync(OUTPUT_FOLDER)
-    getSphereClientCredentials(PROJECT_KEY)
-    .then((sphereCredentials) => {
-      const options = {
-        config: sphereCredentials,
-      }
-      sphereClientConfig = options
-      client = new SphereClient(options)
-
-      productTypeExport = new ProductTypeExport({
-        sphereClientConfig: options,
-        config: { outputFolder: OUTPUT_FOLDER },
-      })
-      deleteAll('productTypes', client)
-      .then(() =>
-        Promise.all(mockProductTypes.map(productType =>
-          client.productTypes.create(productType)
-        ))
-      )
-      .then(() => {
-        done()
-      })
-      .catch(done)
+    productTypeExport = new ProductTypeExport({
+      sphereClientConfig: options,
+      config: { outputFolder: OUTPUT_FOLDER },
     })
+    return deleteAll('productTypes', client)
+    .then(() =>
+      Promise.all(mockProductTypes.map(productType =>
+        client.productTypes.create(productType)
+      ))
+    )
   })
+}
+test(`productType export module
+  should download all product types into a file`, (t) => {
+  t.timeoutAfter(15000) // 15s
 
-  describe('downloadProductTypes', () => {
-    it('should download all product types into a file', (done) => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
-      .then(() => {
-        // check file
-        const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
-        const productTypes = JSON.parse(file)
-        const actualKeys = productTypes.map(({ key }) => key)
-        const expectedKeys = mockProductTypes.map(({ key }) => key)
-        expectedKeys.forEach((key) => {
-          expect(actualKeys.includes(key)).to.equal(true)
-        })
-        done()
+  before().then(() => {
+    const downloadFolder = tempWrite.sync()
+    productTypeExport.downloadProductTypes(downloadFolder)
+    .then(() => {
+      // check file
+      const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
+      const productTypes = JSON.parse(file)
+      const actualKeys = productTypes.map(({ key }) => key)
+      const expectedKeys = mockProductTypes.map(({ key }) => key)
+      expectedKeys.forEach((key) => {
+        t.equal(actualKeys.includes(key), true)
       })
-      .catch(done)
+      t.end()
     })
-  })
+    .catch(t.end)
+  }).catch(t.end)
+})
 
-  describe('collectTypesAndAttributes', () => {
-    it('should read product types one by one from downloaded file', (done) => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
-      .then(() => productTypeExport.collectTypesAndAttributes(downloadFolder))
-      .then(({ productTypes, attributes }) => {
-        const actualTypes = []
-        const actualAttributes = []
-        productTypes.on('data', (data) => {
-          actualTypes.push(data)
-        })
-        attributes.on('data', (data) => {
-          actualAttributes.push(data)
-        })
-        productTypes.on('end', () => {
-          attributes.on('end', () => {
-            mockProductTypes.forEach((
-              { name, description, attributes: typeAttrs }
-            ) => {
-              const actualType = actualTypes.find(t => t.name === name)
-              expect(!!actualType).to.equal(true)
-              expect(actualType).to.deep.equal({
-                name,
-                description,
-                attributes: typeAttrs.map(attr => attr.name),
-              })
-              // all of the types attributes should have been collected
-              typeAttrs.forEach((typeAttr) => {
-                const collectedAttribute = actualAttributes.some(
-                  attr => attr.name === typeAttr.name
-                )
-                expect(collectedAttribute).to.equal(true)
-              })
+test(`productType export module
+  should read product types one by one from downloaded file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    const downloadFolder = tempWrite.sync()
+    productTypeExport.downloadProductTypes(downloadFolder)
+    .then(() => productTypeExport.collectTypesAndAttributes(downloadFolder))
+    .then(({ productTypes, attributes }) => {
+      const actualTypes = []
+      const actualAttributes = []
+      productTypes.on('data', (data) => {
+        actualTypes.push(data)
+      })
+      attributes.on('data', (data) => {
+        actualAttributes.push(data)
+      })
+      productTypes.on('end', () => {
+        attributes.on('end', () => {
+          mockProductTypes.forEach((
+            { name, description, attributes: typeAttrs }
+          ) => {
+            const expectedType = {
+              name,
+              description,
+              attributes: typeAttrs.map(attr => attr.name),
+            }
+            const actualType = actualTypes.find(type => type.name === name)
+            t.ok(actualType)
+            t.deepEqual(actualType, expectedType)
+            // all of the types attributes should have been collected
+            typeAttrs.forEach((typeAttr) => {
+              const collectedAttribute = actualAttributes.some(
+                attr => attr.name === typeAttr.name
+              )
+              t.equal(collectedAttribute, true)
             })
-            done()
           })
+          t.end()
         })
       })
-      .catch(() => {
-        done()
-      })
     })
+    .catch(t.end)
   })
+  .catch(t.end)
+})
+test(`productType export module
+  should return all unique attributes in the product types`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    const downloadFolder = tempWrite.sync()
+    productTypeExport.downloadProductTypes(downloadFolder)
+    .then(() => productTypeExport.collectAttributes(downloadFolder))
+    .then(({ attributeNames, attributeKeys }) => {
+      // should have collected all attributes
+      mockProductTypes.forEach((type) => {
+        type.attributes.forEach((attr) => {
+          t.equal(attributeNames.includes(attr.name), true)
+        })
+      })
 
-  describe('collectAttributes', () => {
-    it('should return all unique attributes in the product types', (done) => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
-      .then(() => productTypeExport.collectAttributes(downloadFolder))
-      .then(({ attributeNames, attributeKeys }) => {
-        // should have collected all attributes
-        mockProductTypes.forEach((type) => {
-          type.attributes.forEach((attr) => {
-            expect(attributeNames.includes(attr.name)).to.equal(true)
+      const expectedKeys = [
+        'type.elementType.name',
+        'type.elementType.values.0.key',
+        'type.elementType.values.0.label.de',
+        'type.elementType.values.0.label.en',
+        'type.elementType.values.1.key',
+        'type.elementType.values.1.label.de',
+        'type.elementType.values.1.label.en',
+        'type.values.0.label.de',
+        'type.values.0.label.en',
+        'type.values.1.label.de',
+        'type.values.1.label.en',
+        'name',
+        'label.en',
+        'label.de',
+        'isRequired',
+        'type.name',
+        'type.values.0.key',
+        'type.values.0.label',
+        'type.values.1.key',
+        'type.values.1.label',
+        'attributeConstraint',
+        'isSearchable',
+        'inputHint',
+        'displayGroup',
+      ]
+      expectedKeys.forEach((attr) => {
+        t.equal(attributeKeys.includes(attr), true)
+      })
+      t.end()
+    })
+    .catch(t.end)
+  }).catch(t.end)
+})
+
+test(`writeProductTypes
+  should write to product type to attribute mapping to file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    const download = tempWrite.sync()
+    const destination = tempWrite.sync()
+    productTypeExport.downloadProductTypes(download)
+    .then(() => productTypeExport.collectAttributes(download))
+    .then(({ attributeNames }) => {
+      productTypeExport.attributeNames = attributeNames
+      return productTypeExport.collectTypesAndAttributes(download)
+    })
+    .then(({ productTypes }) =>
+      productTypeExport.writeProductTypes(productTypes, destination)
+    )
+    .then(() => {
+      const file = fs.readFileSync(destination, 'utf-8')
+      const attributes = productTypeExport.attributeNames.join(',')
+      file.split('\n').forEach((row, i) => {
+        if (i === 0)
+          t.equal(row, `name,description,${attributes}`)
+        // only testing the header row, the rest can be unit tested
+      })
+      t.end()
+    })
+    .catch(t.end)
+  })
+  .catch(t.end)
+})
+
+test(`productType export module
+  should write to attributes with all properties to file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    const download = tempWrite.sync()
+    const destination = tempWrite.sync(null, 'output.csv')
+    productTypeExport.downloadProductTypes(download)
+    .then(() => productTypeExport.collectAttributes(download))
+    .then(({ attributeNames, attributeKeys }) => {
+      productTypeExport.attributeNames = sortAttributes(attributeNames)
+      productTypeExport.attributeKeys = sortAttributes(attributeKeys)
+      return productTypeExport.collectTypesAndAttributes(download)
+    })
+    .then(({ attributes }) =>
+      productTypeExport.writeAttributes(attributes, destination)
+    )
+    .then(() => {
+      const file = fs.readFileSync(destination, 'utf-8').split('\n')
+      const header = file[0].split(',')
+      const getColIndex = key => header.indexOf(key)
+      const getRow = index => file[index].split(',')
+      // check if all the product types have been exported
+      productTypeExport.attributeNames.reduce((rowIndex, attrName) => {
+        const attrDef = mockAttributes.find(mock => mock.name === attrName)
+        const {
+          name, type, label, attributeConstraint, inputHint, displayGroup,
+          isRequired, isSearchable,
+        } = attrDef
+        const row = getRow(rowIndex)
+        t.equal(row[0], name)
+        // if the type is a set the element type of the set needs to appended
+        const typeName = type.name === 'set' ? `set:${
+          type.elementType.name
+        }` : type.name
+
+        t.equal(row[1], typeName)
+        // check for all the localizations of the label
+        Object.keys(label).forEach((locale) => {
+          t.equal(row[getColIndex(`label.${locale}`)], label[locale])
+        })
+        t.equal(row[getColIndex('attributeConstraint')], attributeConstraint)
+        if (inputHint)
+          t.equal(row[getColIndex('textInputHint')], inputHint)
+
+        if (displayGroup)
+          t.equal(row[getColIndex('displayGroup')], displayGroup)
+
+        if (isRequired)
+          t.equal(row[getColIndex('isRequired')], isRequired)
+
+        if (isSearchable)
+          t.equal(row[getColIndex('isSearchable')], isSearchable)
+
+        let additionalRowsForValues = 0
+        // check if the type contains multiple values
+        if (
+          'values' in type ||
+          ('elementType' in type && 'values' in type.elementType)
+        ) {
+          const values = (type.values || type.elementType.values)
+          // store the number of rows needed for the current attributes
+          // according to the length of the list of values
+          additionalRowsForValues = values.length - 1
+          values.forEach((attrVal, index) => {
+            const valueRow = getRow(rowIndex + index)
+            // check for the enum key
+            t.equal(valueRow[getColIndex('enumKey')], attrVal.key)
+            // check for enum label
+            if (typeof attrVal.label === 'object')
+              return Object.keys(attrVal.label).forEach((locale) => {
+                t.equal(valueRow[getColIndex(`enumLabel.${locale}`)],
+                  attrVal.label[locale])
+              })
+
+            return t.equal(valueRow[
+              getColIndex('enumLabel')
+            ], attrVal.label)
           })
-        })
-
-        const expectedKeys = [
-          'type.elementType.name',
-          'type.elementType.values.0.key',
-          'type.elementType.values.0.label.de',
-          'type.elementType.values.0.label.en',
-          'type.elementType.values.1.key',
-          'type.elementType.values.1.label.de',
-          'type.elementType.values.1.label.en',
-          'type.values.0.label.de',
-          'type.values.0.label.en',
-          'type.values.1.label.de',
-          'type.values.1.label.en',
-          'name',
-          'label.en',
-          'label.de',
-          'isRequired',
-          'type.name',
-          'type.values.0.key',
-          'type.values.0.label',
-          'type.values.1.key',
-          'type.values.1.label',
-          'attributeConstraint',
-          'isSearchable',
-          'inputHint',
-          'displayGroup',
-        ]
-        expectedKeys.forEach((attr) => {
-          expect(attributeKeys.includes(attr)).to.equal(true)
-        })
-        done()
-      })
-      .catch(done)
+        }
+        return rowIndex + additionalRowsForValues + 1
+      }, 1 /* start at 1 to skip the header row */)
+      t.end()
     })
-
-    it('should reject when there is an error', (done) => {
-      productTypeExport.collectAttributes()
-      .catch(() => {
-        done()
-      })
-    })
+    .catch(t.end)
   })
+  .catch(t.end)
+})
 
-  describe('writeProductTypes', () => {
-    it('should write to product type to attribute mapping to file', (done) => {
-      const download = tempWrite.sync()
-      const destination = tempWrite.sync()
-      productTypeExport.downloadProductTypes(download)
-      .then(() => productTypeExport.collectAttributes(download))
-      .then(({ attributeNames }) => {
-        productTypeExport.attributeNames = attributeNames
-        return productTypeExport.collectTypesAndAttributes(download)
+test(`productType export module
+  should output a product types and an attributes file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    productTypeExport.run()
+    .then(() => {
+      glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
+        t.equal(files.length, 2)
+        t.equal(files[0].split('/').pop(), 'attributes.csv')
+        t.equal(files[1].split('/').pop(),
+          'products-to-attributes.csv'
+        )
+        t.end()
       })
-      .then(({ productTypes }) =>
-        productTypeExport.writeProductTypes(productTypes, destination)
-      )
-      .then(() => {
-        const file = fs.readFileSync(destination, 'utf-8')
-        const attributes = productTypeExport.attributeNames.join(',')
-        file.split('\n').forEach((row, i) => {
-          if (i === 0)
-            expect(row).to.equal(`name;description;${attributes}`)
-          // only testing the header row, the rest can be unit tested
-        })
-        done()
-      })
-      .catch(done)
     })
+    .catch(t.end)
   })
+  .catch(t.end)
+})
 
-  describe('writeAttributes', () => {
-    it('should write to attributes with all properties to file', (done) => {
-      const download = tempWrite.sync()
-      const destination = tempWrite.sync(null, 'output.csv')
-      productTypeExport.downloadProductTypes(download)
-      .then(() => productTypeExport.collectAttributes(download))
-      .then(({ attributeNames, attributeKeys }) => {
-        productTypeExport.attributeNames = sortAttributes(attributeNames)
-        productTypeExport.attributeKeys = sortAttributes(attributeKeys)
-        return productTypeExport.collectTypesAndAttributes(download)
+test(`productType export module
+  should generate a report`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    productTypeExport.run()
+    .then(() => {
+      const summary = JSON.parse(productTypeExport.summaryReport())
+      t.deepEqual(summary.errors, [])
+      t.deepEqual(summary.exported, {
+        productTypes: testProductTypes.length,
+        attributes: mockAttributes.length,
       })
-      .then(({ attributes }) =>
-        productTypeExport.writeAttributes(attributes, destination)
-      )
-      .then(() => {
-        const file = fs.readFileSync(destination, 'utf-8').split('\n')
-<<<<<<< 193babadbb8fc5ef82be2ca0a40d325ac24fc516:tests/integration/product-type-export.js
-        const header = file[0].split(',')
-        const getColIndex = (key) => header.indexOf(key)
-        const getRow = (index) => file[index].split(',')
-=======
-        const header = file[0].split(';')
-        const getColIndex = key => header.indexOf(key)
-        const getRow = index => file[index].split(';')
->>>>>>> style(project): add commercetools-eslint-config:tests/integration/product-type-export.spec.js
-        // check if all the product types have been exported
-        productTypeExport.attributeNames.reduce((rowIndex, attrName) => {
-          const attrDef = mockAttributes.find(mock => mock.name === attrName)
-          const {
-            name, type, label, attributeConstraint, inputHint, displayGroup,
-            isRequired, isSearchable,
-          } = attrDef
-          const row = getRow(rowIndex)
-          expect(row[0]).to.equal(name)
-          // if the type is a set the element type of the set needs to appended
-          const typeName = type.name === 'set' ? `set:${
-            type.elementType.name
-          }` : type.name
+      t.end()
+    }).catch(t.end)
+  }).catch(t.end)
+})
 
-          expect(row[1]).to.equal(typeName)
-          // check for all the localizations of the label
-          Object.keys(label).forEach((locale) => {
-            expect(row[getColIndex(`label.${locale}`)]).to.equal(label[locale])
-          })
-          expect(row[getColIndex('attributeConstraint')]).to.equal(
-            attributeConstraint
-          )
-          if (inputHint)
-            expect(row[getColIndex('textInputHint')]).to.equal(inputHint)
-
-          if (displayGroup)
-            expect(row[getColIndex('displayGroup')]).to.equal(displayGroup)
-
-          if (isRequired)
-            expect(row[getColIndex('isRequired')]).to.equal(isRequired)
-
-          if (isSearchable)
-            expect(row[getColIndex('isSearchable')]).to.equal(isSearchable)
-
-          let additionalRowsForValues = 0
-          // check if the type contains multiple values
-          if (
-            'values' in type ||
-            ('elementType' in type && 'values' in type.elementType)
-          ) {
-            const values = (type.values || type.elementType.values)
-            // store the number of rows needed for the current attributes
-            // according to the length of the list of values
-            additionalRowsForValues = values.length - 1
-            values.forEach((attrVal, index) => {
-              const valueRow = getRow(rowIndex + index)
-              // check for the enum key
-              expect(valueRow[getColIndex('enumKey')]).to.equal(attrVal.key)
-              // check for enum label
-              if (typeof attrVal.label === 'object')
-                return Object.keys(attrVal.label).forEach((locale) => {
-                  expect(valueRow[getColIndex(`enumLabel.${locale}`)])
-                    .to.equal(attrVal.label[locale])
-                })
-
-              return expect(valueRow[
-                getColIndex('enumLabel')
-              ]).to.equal(attrVal.label)
-            })
-          }
-          return rowIndex + additionalRowsForValues + 1
-        }, 1 /* start at 1 to skip the header row */)
-        done()
-      })
-      .catch(done)
-    })
-  })
-
-  describe('run', () => {
-    it('should output a product types and an attributes file', (done) => {
-      productTypeExport.run()
-      .then(() => {
-        glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
-          expect(files.length).to.equal(2)
-          expect(files[0].split('/').pop()).to.equal('attributes.csv')
-          expect(files[1].split('/').pop()).to.equal(
-            'products-to-attributes.csv'
-          )
-          done()
-        })
-      }).catch(done)
-    })
-    it('should generate a report', (done) => {
-      productTypeExport.run()
-      .then(() => {
-        const summary = JSON.parse(productTypeExport.summaryReport())
-        expect(summary.errors).to.deep.equal([])
-        expect(summary.exported).to.deep.equal({
-          productTypes: testProductTypes.length,
-          attributes: mockAttributes.length,
-        })
-        done()
-      }).catch(done)
-    })
-    it('should list all errors in the report', (done) => {
-      productTypeExport.downloadProductTypes = () => Promise.reject(
+test(`productType export module
+  should list all errors in the report`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    productTypeExport.downloadProductTypes = () => Promise.reject(
         'some-error'
       )
-      productTypeExport.run()
-      .then(() => {
-        const summary = JSON.parse(productTypeExport.summaryReport())
-        expect(summary.errors).to.deep.equal(['some-error'])
-        expect(summary.exported).to.deep.equal({
-          productTypes: 0,
-          attributes: 0,
-        })
-        done()
-      }).catch(done)
-    })
-    it('should output a zip file', (done) => {
-      const productTypeExportCompress = new ProductTypeExport({
-        sphereClientConfig,
-        config: { outputFolder: OUTPUT_FOLDER, compressOutput: true },
+    productTypeExport.run()
+    .then(() => {
+      const summary = JSON.parse(productTypeExport.summaryReport())
+      t.deepEqual(summary.errors, ['some-error'])
+      t.deepEqual(summary.exported, {
+        productTypes: 0,
+        attributes: 0,
       })
-      productTypeExportCompress.run()
-      .then(() => {
-        glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
-          expect(files.length).to.equal(1)
-          expect(files[0].split('/').pop()).to.equal('product-types.zip')
-          done()
-        })
-      }).catch(done)
-    })
+      t.end()
+    }).catch(t.end)
   })
+  .catch(t.end)
+})
+
+test(`productType export module
+  should output a zip file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+  before().then(() => {
+    const productTypeExportCompress = new ProductTypeExport({
+      sphereClientConfig,
+      config: { outputFolder: OUTPUT_FOLDER, compressOutput: true },
+    })
+    productTypeExportCompress.run()
+    .then(() => {
+      glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
+        t.equal(files.length, 1)
+        t.equal(files[0].split('/').pop(), 'product-types.zip')
+        t.end()
+      })
+    })
+    .catch(t.end)
+  })
+  .catch(t.end)
 })

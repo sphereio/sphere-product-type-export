@@ -1,79 +1,88 @@
 import { SphereClient } from 'sphere-node-sdk'
-import { expect } from 'chai'
+import test from 'tape'
 import ProductTypeExport from '../../src'
 
 const PROJECT_KEY = 'sphere-node-product-type-import'
 
-describe('product-type import module', () => {
-  const options = {
-    sphereClientConfig: {
-      config: {
-        project_key: PROJECT_KEY,
-        client_id: '*********',
-        client_secret: '*********',
-      },
-      rest: {
-        config: {},
-        GET: (endpoint, callback) => {
-          callback(null, { statusCode: 200 }, { results: [] })
-        },
-        POST: (endpoint, payload, callback) => {
-          callback(null, { statusCode: 200 })
-        },
-        PUT: () => {},
-        DELETE: () => (/* endpoint, callback */) => {},
-        PAGED: () => (/* endpoint, callback */) => {},
-        _preRequest: () => {},
-        _doRequest: () => {},
-      },
-    },
+const options = {
+  sphereClientConfig: {
     config: {
-      outputFolder: 'sample/folder',
+      project_key: PROJECT_KEY,
+      client_id: '*********',
+      client_secret: '*********',
+    },
+    rest: {
+      config: {},
+      GET: (endpoint, callback) => {
+        callback(null, { statusCode: 200 }, { results: [] })
+      },
+      POST: (endpoint, payload, callback) => {
+        callback(null, { statusCode: 200 })
+      },
+      PUT: () => {},
+      DELETE: () => (/* endpoint, callback */) => {},
+      PAGED: () => (/* endpoint, callback */) => {},
+      _preRequest: () => {},
+      _doRequest: () => {},
+    },
+  },
+  config: {
+    outputFolder: 'sample/folder',
+  },
+}
+
+test(`productType import module
+  should be class`, (t) => {
+  const expected = 'function'
+  const actual = typeof ProductTypeExport
+
+  t.equal(actual, expected)
+  t.end()
+})
+
+test(`productType import module
+  should create a sphere client`, (t) => {
+  const exporter = new ProductTypeExport(options)
+  const expected = SphereClient
+  const actual = exporter.client.constructor
+
+  t.equal(actual, expected)
+  t.end()
+})
+
+test(`productType import module
+  summaryReport should return no errors and no exported product-types
+    if no product-types were exported`, (t) => {
+  const exporter = new ProductTypeExport(options)
+  const expected = {
+    errors: [],
+    exported: {
+      productTypes: 0,
+      attributes: 0,
     },
   }
+  const actual = JSON.parse(exporter.summaryReport())
 
-  it('should be class', () => {
-    const expected = 'function'
-    const actual = typeof ProductTypeExport
+  t.deepEqual(actual, expected)
+  t.end()
+})
 
-    expect(actual).to.equal(expected)
-  })
+test(`productType import module
+  should throw an error if the output folder is not given`, (t) => {
+  const noConfigOptions = {
+    ...options,
+    config: undefined,
+  }
+  const createExporter = () => new ProductTypeExport(noConfigOptions)
+  t.throws(createExporter)
+  t.end()
+})
 
-  it('should create a sphere client', () => {
-    const exporter = new ProductTypeExport(options)
-    const expected = SphereClient
-    const actual = exporter.client.constructor
+test(`productType import module
+  should use a comma as default delimiter`, (t) => {
+  const exporter = new ProductTypeExport(options)
 
-    expect(actual).to.equal(expected)
-  })
+  t.equal(exporter.config.delimiter, ',')
 
-  it(`summaryReport should return no errors and no exported product-types
-    if no product-types were exported`, () => {
-    const exporter = new ProductTypeExport(options)
-    const expected = {
-      errors: [],
-      exported: {
-        productTypes: 0,
-        attributes: 0,
-      },
-    }
-    const actual = JSON.parse(exporter.summaryReport())
-
-    expect(actual).to.deep.equal(expected)
-  })
-
-  it('should throw an error if the output folder is not fiven', () => {
-    const noConfigOptions = {
-      ...options,
-      config: undefined,
-    }
-    const createExporter = () => new ProductTypeExport(noConfigOptions)
-    expect(createExporter).to.throw()
-  })
-
-  it('should use a comma as default delimiter', () => {
-    const exporter = new ProductTypeExport(options)
-
-    expect(exporter.config.delimiter).to.equal(',')
-  })
+  t.end()
 })
