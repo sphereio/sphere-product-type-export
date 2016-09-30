@@ -29,6 +29,10 @@
     "product-type",
     "export"
   ],
+  "files": [
+    "dist",
+    "bin"
+  ],
   "author": "Philipp Sporrer <philipp.sporrer@commercetools.de>",
   "license": "MIT",
   "devDependencies": {
