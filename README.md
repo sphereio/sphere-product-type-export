@@ -17,7 +17,7 @@ This library is built to be used in conjunction with [sphere-node-cli](https://g
 ### Configuration
 The configuration object may contain:
 - `config`: configuration object that may contain the following options
-  - `delimiter`: the delimiter to be used in the csv (_default_: `;`)
+  - `delimiter`: the delimiter to be used in the csv (_default_: `,`)
   - `outputFolder` (_required_): the folder used to store the exported product types and attributes
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 
