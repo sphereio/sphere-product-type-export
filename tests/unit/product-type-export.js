@@ -64,4 +64,10 @@ describe('product-type import module', () => {
     const createExporter = () => new ProductTypeExport(noConfigOptions)
     expect(createExporter).to.throw()
   })
+
+  it('should use a comma as default delimiter', () => {
+    const exporter = new ProductTypeExport(options)
+
+    expect(exporter.config.delimiter).to.equal(',')
+  })
 })
