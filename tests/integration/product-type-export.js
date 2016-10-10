@@ -325,10 +325,10 @@ describe('productType export module', function integrationTest() {
       )
       .then(() => {
         const file = fs.readFileSync(destination, 'utf-8')
-        const attributes = productTypeExport.attributeNames.join(';')
+        const attributes = productTypeExport.attributeNames.join(',')
         file.split('\n').forEach((row, i) => {
           if (i === 0) {
-            expect(row).to.equal(`name;description;${attributes}`)
+            expect(row).to.equal(`name,description,${attributes}`)
           }
           // only testing the header row, the rest can be unit tested
         })
@@ -354,9 +354,9 @@ describe('productType export module', function integrationTest() {
       )
       .then(() => {
         const file = fs.readFileSync(destination, 'utf-8').split('\n')
-        const header = file[0].split(';')
+        const header = file[0].split(',')
         const getColIndex = (key) => header.indexOf(key)
-        const getRow = (index) => file[index].split(';')
+        const getRow = (index) => file[index].split(',')
         // check if all the product types have been exported
         productTypeExport.attributeNames.reduce((rowIndex, attrName) => {
           const attrDef = mockAttributes.find(mock => mock.name === attrName)
