@@ -5,3 +5,4 @@ coverage
 output
 .sphere-project-credentials.json
 *.log
+.nyc_output
