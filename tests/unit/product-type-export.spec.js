@@ -1,8 +1,14 @@
 import { SphereClient } from 'sphere-node-sdk'
 import test from 'tape'
 import ProductTypeExport from '../../src'
+import getSphereClientCredentials from '../../src/utils'
 
-const PROJECT_KEY = 'sphere-node-product-type-import'
+let PROJECT_KEY
+
+if (process.env.CI === 'true')
+  PROJECT_KEY = process.env.SPHERE_PROJECT_KEY
+else
+  PROJECT_KEY = process.env.npm_config_projectkey
 
 const options = {
   sphereClientConfig: {
@@ -30,6 +36,21 @@ const options = {
     outputFolder: 'sample/folder',
   },
 }
+
+test(`getSphereClientCredentials
+  should throw an error is projectKey is not defined`, (t) => {
+  getSphereClientCredentials(undefined)
+    .then(() => {
+      t.fail('should not resolve')
+      t.end()
+    })
+    .catch((err) => {
+      const expectedMsg = 'Project Key is needed'
+      t.ok(err, 'Error should exist')
+      t.equal(err.message, expectedMsg, 'Error message should be present')
+      t.end()
+    })
+})
 
 test(`productType import module
   should be class`, (t) => {

@@ -12,6 +12,14 @@ import ProductTypeExport, { sortAttributes } from '../../src/product-type-export
 import getSphereClientCredentials from '../../src/utils'
 
 const random = () => !!Math.round(Math.random())
+
+let PROJECT_KEY
+
+if (process.env.CI === 'true')
+  PROJECT_KEY = process.env.SPHERE_PROJECT_KEY
+else
+  PROJECT_KEY = process.env.npm_config_projectkey
+
 // const csvRowForType = (type) => {
 //   const { name, description, attributes } = type
 //   const hasAttributes = attributes.map(a => {
@@ -138,7 +146,6 @@ const createProductType = () => ({
   ],
 })
 
-const PROJECT_KEY = 'abimbola-dev-test'
 const deleteAll = (service, client) =>
   client[service].process(({ body: { results } }) =>
     Promise.all(results.map(productType =>
@@ -170,24 +177,24 @@ const before = function setup () {
   OUTPUT_FOLDER = tempfile()
   fs.mkdirSync(OUTPUT_FOLDER)
   return getSphereClientCredentials(PROJECT_KEY)
-  .then((sphereCredentials) => {
-    const options = {
-      config: sphereCredentials,
-    }
-    sphereClientConfig = options
-    client = new SphereClient(options)
+    .then((sphereCredentials) => {
+      const options = {
+        config: sphereCredentials,
+      }
+      sphereClientConfig = options
+      client = new SphereClient(options)
 
-    productTypeExport = new ProductTypeExport({
-      sphereClientConfig: options,
-      config: { outputFolder: OUTPUT_FOLDER },
+      productTypeExport = new ProductTypeExport({
+        sphereClientConfig: options,
+        config: { outputFolder: OUTPUT_FOLDER },
+      })
+      return deleteAll('productTypes', client)
+      .then(() =>
+        Promise.all(mockProductTypes.map(productType =>
+          client.productTypes.create(productType)
+        ))
+      )
     })
-    return deleteAll('productTypes', client)
-    .then(() =>
-      Promise.all(mockProductTypes.map(productType =>
-        client.productTypes.create(productType)
-      ))
-    )
-  })
 }
 test(`productType export module
   should download all product types into a file`, (t) => {
@@ -207,7 +214,6 @@ test(`productType export module
       })
       t.end()
     })
-    .catch(t.end)
   }).catch(t.end)
 })
 
@@ -252,7 +258,6 @@ test(`productType export module
         })
       })
     })
-    .catch(t.end)
   })
   .catch(t.end)
 })
@@ -302,8 +307,8 @@ test(`productType export module
       })
       t.end()
     })
-    .catch(t.end)
-  }).catch(t.end)
+  })
+  .catch(t.end)
 })
 
 test(`writeProductTypes
@@ -331,7 +336,6 @@ test(`writeProductTypes
       })
       t.end()
     })
-    .catch(t.end)
   })
   .catch(t.end)
 })
@@ -419,7 +423,6 @@ test(`productType export module
       }, 1 /* start at 1 to skip the header row */)
       t.end()
     })
-    .catch(t.end)
   })
   .catch(t.end)
 })
@@ -439,7 +442,6 @@ test(`productType export module
         t.end()
       })
     })
-    .catch(t.end)
   })
   .catch(t.end)
 })
@@ -457,8 +459,9 @@ test(`productType export module
         attributes: mockAttributes.length,
       })
       t.end()
-    }).catch(t.end)
-  }).catch(t.end)
+    })
+  })
+  .catch(t.end)
 })
 
 test(`productType export module
@@ -477,7 +480,7 @@ test(`productType export module
         attributes: 0,
       })
       t.end()
-    }).catch(t.end)
+    })
   })
   .catch(t.end)
 })
@@ -498,7 +501,6 @@ test(`productType export module
         t.end()
       })
     })
-    .catch(t.end)
   })
   .catch(t.end)
 })
