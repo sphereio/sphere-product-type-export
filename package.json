@@ -111,7 +111,7 @@
     },
     "ghooks": {
       "commit-msg": "validate-commit-msg",
-      "pre-commit": "./scripts/lint-staged-files && npm run coverage && npm run check-coverage"
+      "pre-commit": "./scripts/lint-staged-files"
     }
   }
 }
