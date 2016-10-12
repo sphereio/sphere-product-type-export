@@ -9,7 +9,7 @@ import tempfile from 'tempfile'
 import path from 'path'
 // eslint-disable-next-line max-len
 import ProductTypeExport, { sortAttributes } from '../../src/product-type-export'
-import getSphereClientCredentials from '../../src/utils'
+import getSphereClientCredentials from '../../src/sphere-client-credentials'
 
 const random = () => !!Math.round(Math.random())
 

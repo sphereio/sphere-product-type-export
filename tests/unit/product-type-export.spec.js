@@ -1,7 +1,7 @@
 import { SphereClient } from 'sphere-node-sdk'
 import test from 'tape'
 import ProductTypeExport from '../../src'
-import getSphereClientCredentials from '../../src/utils'
+import getSphereClientCredentials from '../../src/sphere-client-credentials'
 
 let PROJECT_KEY
 
