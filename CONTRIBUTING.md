@@ -15,7 +15,6 @@ Table of Contents
 
 ## Requirements:
 * NodeJS(v4 LTS)
-* git crypt
 
 ## Installation
 Clone this repository
