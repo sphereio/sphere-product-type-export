@@ -57,7 +57,7 @@ test(`productType import module
   const expected = 'function'
   const actual = typeof ProductTypeExport
 
-  t.equal(actual, expected)
+  t.equal(actual, expected, 'productType import module is a function')
   t.end()
 })
 
@@ -67,7 +67,11 @@ test(`productType import module
   const expected = SphereClient
   const actual = exporter.client.constructor
 
-  t.equal(actual, expected)
+  t.equal(
+    actual,
+    expected,
+    'productType import module is an instanceof SphereClient'
+  )
   t.end()
 })
 
@@ -84,7 +88,7 @@ test(`productType import module
   }
   const actual = JSON.parse(exporter.summaryReport())
 
-  t.deepEqual(actual, expected)
+  t.deepEqual(actual, expected, 'Summary report contains no errors')
   t.end()
 })
 
@@ -95,7 +99,7 @@ test(`productType import module
     config: undefined,
   }
   const createExporter = () => new ProductTypeExport(noConfigOptions)
-  t.throws(createExporter)
+  t.throws(createExporter, 'Throws an erorr when no output folder is given')
   t.end()
 })
 
@@ -103,7 +107,7 @@ test(`productType import module
   should use a comma as default delimiter`, (t) => {
   const exporter = new ProductTypeExport(options)
 
-  t.equal(exporter.config.delimiter, ',')
+  t.equal(exporter.config.delimiter, ',', 'comma is the default delimiter')
 
   t.end()
 })

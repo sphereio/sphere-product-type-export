@@ -210,7 +210,10 @@ test(`productType export module
       const actualKeys = productTypes.map(({ key }) => key)
       const expectedKeys = mockProductTypes.map(({ key }) => key)
       expectedKeys.forEach((key) => {
-        t.equal(actualKeys.includes(key), true)
+        t.ok(
+          actualKeys.includes(key),
+          `ProductType key '${key}' is present in the file`
+        )
       })
       t.end()
     })
@@ -244,14 +247,22 @@ test(`productType export module
               attributes: typeAttrs.map(attr => attr.name),
             }
             const actualType = actualTypes.find(type => type.name === name)
-            t.ok(actualType)
-            t.deepEqual(actualType, expectedType)
+            t.ok(actualType, `ProductType '${actualType}' is present`)
+            t.deepEqual(
+              actualType,
+              expectedType,
+              `downloaded productTypes ${JSON.stringify(actualType)}
+              matches mockProductTypes ${JSON.stringify(actualType)}`
+            )
             // all of the types attributes should have been collected
             typeAttrs.forEach((typeAttr) => {
               const collectedAttribute = actualAttributes.some(
                 attr => attr.name === typeAttr.name
               )
-              t.equal(collectedAttribute, true)
+              t.ok(
+                collectedAttribute,
+                `attribute ${collectedAttribute} is present`
+              )
             })
           })
           t.end()
@@ -272,7 +283,10 @@ test(`productType export module
       // should have collected all attributes
       mockProductTypes.forEach((type) => {
         type.attributes.forEach((attr) => {
-          t.equal(attributeNames.includes(attr.name), true)
+          t.ok(
+            attributeNames.includes(attr.name),
+            `Attribute name ${attr.name} is present`
+          )
         })
       })
 
@@ -303,7 +317,10 @@ test(`productType export module
         'displayGroup',
       ]
       expectedKeys.forEach((attr) => {
-        t.equal(attributeKeys.includes(attr), true)
+        t.ok(
+          attributeKeys.includes(attr),
+          `Attribute key ${attr} is present exported downloadProductTypes`
+        )
       })
       t.end()
     })
@@ -331,7 +348,11 @@ test(`writeProductTypes
       const attributes = productTypeExport.attributeNames.join(',')
       file.split('\n').forEach((row, i) => {
         if (i === 0)
-          t.equal(row, `name,description,${attributes}`)
+          t.equal(
+            row,
+            `name,description,${attributes}`,
+            `exported row ${row} is equal`
+          )
         // only testing the header row, the rest can be unit tested
       })
       t.end()
@@ -369,29 +390,52 @@ test(`productType export module
           isRequired, isSearchable,
         } = attrDef
         const row = getRow(rowIndex)
-        t.equal(row[0], name)
+        t.equal(row[0], name, `row ${name} is equal to name`)
         // if the type is a set the element type of the set needs to appended
         const typeName = type.name === 'set' ? `set:${
           type.elementType.name
         }` : type.name
-
-        t.equal(row[1], typeName)
+        t.equal(row[1], typeName, `attribute ${typeName} type is equal`)
         // check for all the localizations of the label
         Object.keys(label).forEach((locale) => {
-          t.equal(row[getColIndex(`label.${locale}`)], label[locale])
+          t.equal(
+            row[getColIndex(`label.${locale}`)],
+            label[locale],
+            `locale ${label[locale]} is equal`
+          )
         })
-        t.equal(row[getColIndex('attributeConstraint')], attributeConstraint)
+        t.equal(
+          row[getColIndex('attributeConstraint')],
+          attributeConstraint,
+          `attributeConstraint ${attributeConstraint} is equal`
+        )
         if (inputHint)
-          t.equal(row[getColIndex('textInputHint')], inputHint)
+          t.equal(
+            row[getColIndex('textInputHint')],
+            inputHint,
+            `inputHint ${inputHint} is equal`
+          )
 
         if (displayGroup)
-          t.equal(row[getColIndex('displayGroup')], displayGroup)
+          t.equal(
+            row[getColIndex('displayGroup')],
+            displayGroup,
+            `Display Group ${displayGroup} is equal`
+          )
 
         if (isRequired)
-          t.equal(row[getColIndex('isRequired')], isRequired)
+          t.equal(
+            row[getColIndex('isRequired')],
+            isRequired,
+            'isRequired flag is equal'
+          )
 
         if (isSearchable)
-          t.equal(row[getColIndex('isSearchable')], isSearchable)
+          t.equal(
+            row[getColIndex('isSearchable')],
+            isSearchable,
+            `isSearchable flag ${isSearchable} is present`
+          )
 
         let additionalRowsForValues = 0
         // check if the type contains multiple values
@@ -406,17 +450,26 @@ test(`productType export module
           values.forEach((attrVal, index) => {
             const valueRow = getRow(rowIndex + index)
             // check for the enum key
-            t.equal(valueRow[getColIndex('enumKey')], attrVal.key)
+            t.equal(
+              valueRow[getColIndex('enumKey')],
+              attrVal.key,
+              `enumKey ${attrVal.key} is equal`,
+            )
             // check for enum label
             if (typeof attrVal.label === 'object')
               return Object.keys(attrVal.label).forEach((locale) => {
-                t.equal(valueRow[getColIndex(`enumLabel.${locale}`)],
-                  attrVal.label[locale])
+                t.equal(
+                  valueRow[getColIndex(`enumLabel.${locale}`)],
+                  attrVal.label[locale],
+                  `enumLabel ${attrVal.label[locale]} is equal`,
+                )
               })
 
-            return t.equal(valueRow[
-              getColIndex('enumLabel')
-            ], attrVal.label)
+            return t.equal(
+              valueRow[getColIndex('enumLabel')],
+              attrVal.label,
+              `enumLabel ${attrVal.label} is present`,
+            )
           })
         }
         return rowIndex + additionalRowsForValues + 1
@@ -434,10 +487,18 @@ test(`productType export module
     productTypeExport.run()
     .then(() => {
       glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
-        t.equal(files.length, 2)
-        t.equal(files[0].split('/').pop(), 'attributes.csv')
-        t.equal(files[1].split('/').pop(),
-          'products-to-attributes.csv'
+        const expectedFileName1 = 'attributes.csv'
+        const expectedFileName2 = 'products-to-attributes.csv'
+        t.equal(files.length, 2, 'files length is 2')
+        t.equal(
+          files[0].split('/').pop(),
+          expectedFileName1,
+          `file name is ${expectedFileName1}`,
+        )
+        t.equal(
+          files[1].split('/').pop(),
+          expectedFileName2,
+          `file name is ${expectedFileName2}`,
         )
         t.end()
       })
@@ -453,11 +514,15 @@ test(`productType export module
     productTypeExport.run()
     .then(() => {
       const summary = JSON.parse(productTypeExport.summaryReport())
-      t.deepEqual(summary.errors, [])
-      t.deepEqual(summary.exported, {
-        productTypes: testProductTypes.length,
-        attributes: mockAttributes.length,
-      })
+      t.deepEqual(summary.errors, [], 'there is no error')
+      t.deepEqual(
+        summary.exported,
+        {
+          productTypes: testProductTypes.length,
+          attributes: mockAttributes.length,
+        },
+        'Summary report is valid',
+      )
       t.end()
     })
   })
@@ -474,11 +539,15 @@ test(`productType export module
     productTypeExport.run()
     .then(() => {
       const summary = JSON.parse(productTypeExport.summaryReport())
-      t.deepEqual(summary.errors, ['some-error'])
-      t.deepEqual(summary.exported, {
-        productTypes: 0,
-        attributes: 0,
-      })
+      t.deepEqual(summary.errors, ['some-error'], 'Error is present')
+      t.deepEqual(
+        summary.exported,
+        {
+          productTypes: 0,
+          attributes: 0,
+        },
+        'Summary report is correct'
+      )
       t.end()
     })
   })
@@ -496,8 +565,12 @@ test(`productType export module
     productTypeExportCompress.run()
     .then(() => {
       glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
-        t.equal(files.length, 1)
-        t.equal(files[0].split('/').pop(), 'product-types.zip')
+        t.equal(files.length, 1, 'files length is 1')
+        t.equal(
+          files[0].split('/').pop(),
+          'product-types.zip',
+          'file name is product-types.zip'
+        )
         t.end()
       })
     })
