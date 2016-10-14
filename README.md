@@ -1,3 +1,4 @@
+[![commercetools logo][commercetools-icon]][commercetools]
 # sphere-product-type-export
 
 [![Travis][travis-badge]][travis-url]
@@ -7,27 +8,30 @@
 [![Commitizen friendly][commitizen-badge]][commitizen-url]
 [![NPM version][npm-image]][npm-url]
 
-A library that helps with exporting [product-types](http://dev.commercetools.com/http-api-projects-productTypes.html) from the [Commercetools Platform](http://www.commercetools.com/).  
+A library that helps with exporting [product-types](http://dev.commercetools.com/http-api-projects-productTypes.html) from the [Commercetools Platform](http://www.commercetools.com/).
 This library is built to be used in conjunction with [sphere-node-cli](https://github.com/sphereio/sphere-node-cli).
 
 ## Features
 - Export product types from your CTP project
 - Creates 2 files - product type / attributes matrix and attributes list - that can be used to reimport product types
 
-### Configuration
+## Configuration
 The configuration object may contain:
 - `config`: configuration object that may contain the following options
   - `delimiter`: the delimiter to be used in the csv (_default_: `,`)
   - `outputFolder` (_required_): the folder used to store the exported product types and attributes
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 
-## Direct usage
+## Usage
 
 If you want more control, you can also use this library directly in JavaScript. To do this you first need to install it:
+
 ```sh
 npm install sphere-product-type-export --save-dev
 ```
+
 Then you can use it to export product types like so:
+
 ```js
 export ProductTypeExport from 'sphere-product-type-export'
 
@@ -60,6 +64,11 @@ productTypeExport.run()
 })
 ```
 
+## Contributing
+  See [CONTRIBUTING.md](CONTRIBUTING.md) file for info on how to contribute to this library
+
+[commercetools]: https://commercetools.com/
+[commercetools-icon]: https://cdn.rawgit.com/commercetools/press-kit/master/PNG/72DPI/CT%20logo%20horizontal%20RGB%2072dpi.png
 [travis-badge]: https://img.shields.io/travis/sphereio/sphere-product-type-export.svg?style=flat-square
 [travis-url]: https://travis-ci.org/sphereio/sphere-product-type-export
 
