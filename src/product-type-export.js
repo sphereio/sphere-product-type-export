@@ -85,7 +85,7 @@ const getValueForKey = (obj, key) => {
 const numberOfRowsForHeaders = headers =>
   headers.filter(h => h.match(/type.values/))
     .reduce((highest, val) => {
-      const regex = /type.values.([0-9])/
+      const regex = /type.values.([0-9]+)/
       const number = parseInt(regex.exec(val)[1], 10)
       return number > highest ? number : highest
     }, 0) + 1

@@ -81,6 +81,36 @@ const createProductType = () => ({
         }, {
           key: 'polar',
           label: 'Polar',
+        }, {
+          key: 'panda',
+          label: 'Panda',
+        }, {
+          key: 'black',
+          label: 'Black',
+        }, {
+          key: 'sloth',
+          label: 'Sloth',
+        }, {
+          key: 'spectacled',
+          label: 'Spectacled',
+        }, {
+          key: 'asian',
+          label: 'Asian',
+        }, {
+          key: 'ursinae',
+          label: 'ursinae',
+        }, {
+          key: 'short-faced',
+          label: 'Short-faced',
+        }, {
+          key: 'kodiak',
+          label: 'Kodiak',
+        }, {
+          key: 'syrian',
+          label: 'Syrian',
+        }, {
+          key: 'himalayan',
+          label: 'Himalayan',
         }],
       },
       attributeConstraint: 'None',
@@ -311,6 +341,26 @@ test(`productType export module
         'type.values.0.label',
         'type.values.1.key',
         'type.values.1.label',
+        'type.values.2.key',
+        'type.values.2.label',
+        'type.values.3.key',
+        'type.values.3.label',
+        'type.values.4.key',
+        'type.values.4.label',
+        'type.values.5.key',
+        'type.values.5.label',
+        'type.values.6.key',
+        'type.values.6.label',
+        'type.values.7.key',
+        'type.values.7.label',
+        'type.values.8.key',
+        'type.values.8.label',
+        'type.values.9.key',
+        'type.values.9.label',
+        'type.values.10.key',
+        'type.values.10.label',
+        'type.values.11.key',
+        'type.values.11.label',
         'attributeConstraint',
         'isSearchable',
         'inputHint',
