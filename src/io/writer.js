@@ -72,7 +72,13 @@ export default class Writer {
   _writeXlsxRows (rows) {
     return Promise.map(rows, (row) => {
       // clean row from undefined and empty strings
-      const cleanedRow = _.map(row, item => (_.isNil(item) ? null : item))
+      const cleanedRow = _.map(row, (item) => {
+        if (_.isNil(item))
+          return null
+        else if (_.isBoolean(item))
+          return (item ? 1 : '')
+        return item
+      })
 
       this.worksheet.addRow(cleanedRow).commit()
     }, { concurrency: 1 })
