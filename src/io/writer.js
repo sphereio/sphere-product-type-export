@@ -6,8 +6,8 @@ import Excel from 'exceljs'
 
 const fs = Promise.promisifyAll(require('fs'))
 
-const DEBUG = false
-const debugLog = DEBUG ? console.log : _.noop
+const debugLog = _.noop
+// const debugLog = console.log
 
 export default class Writer {
   constructor (options) {
@@ -17,18 +17,20 @@ export default class Writer {
 
     this.options.availableFormats = ['xlsx', 'csv']
     this.options.defaultEncoding = 'utf8'
+    this.options.encoding = options.encoding || this.options.defaultEncoding
+
+    if (!options.outputFile)
+      throw new Error('OutputFile was not specified')
 
     if (options.availableFormats.indexOf(options.exportFormat) < 0)
       throw new Error(`Unsupported file type: ${options.exportFormat}, `
         + `alowed formats are ${options.availableFormats.toString()}`)
 
-    if (this.options.outputFile) {
-      debugLog('WRITER::stream file %s', options.outputFile)
-      this.outputStream = fs.createWriteStream(options.outputFile)
-    } else {
-      debugLog('WRITER::stream stdout')
-      this.outputStream = process.stdout
-    }
+    if (options.encoding && !iconv.encodingExists(options.encoding))
+      throw new Error(`Encoding does not exist: ${options.encoding}`)
+
+    debugLog('WRITER::stream file %s', options.outputFile)
+    this.outputStream = fs.createWriteStream(options.outputFile)
 
     // if we use xlsx export - create workbook first
     if (options.exportFormat === 'xlsx')
@@ -43,11 +45,9 @@ export default class Writer {
   }
 
   encode (string) {
-    if (this.options.encoding === this.options.defaultEncoding)
+    if (!this.options.encoding
+      || this.options.encoding === this.options.defaultEncoding)
       return string
-
-    if (!iconv.encodingExists(this.options.encoding))
-      throw new Error(`Encoding does not exist: ${this.options.encoding}`)
 
     return iconv.encode(string, this.options.encoding)
   }
@@ -76,7 +76,7 @@ export default class Writer {
         if (_.isNil(item))
           return null
         else if (_.isBoolean(item))
-          return (item ? 1 : '')
+          return item ? 1 : ''
         return item
       })
 
@@ -94,11 +94,8 @@ export default class Writer {
       delimiter: this.options.csvDelimiter,
     }
 
-    return new Promise((resolve, reject) =>
+    return new Promise(resolve =>
       stringify(data, opts, (err, string) => {
-        if (err)
-          return reject(err)
-
         this.outputStream.write(this.encode(string))
         return resolve()
       })
