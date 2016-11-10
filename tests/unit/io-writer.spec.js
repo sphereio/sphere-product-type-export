@@ -11,9 +11,21 @@ const readXlsx = function readXlsx (filePath) {
   return workbook.xlsx.readFile(filePath)
     .then(() => {
       const worksheet = workbook.getWorksheet(1)
+      let headerLen = null
       worksheet.eachRow((row) => {
         let rowValues = row.values
         rowValues.shift()
+
+        if (headerLen)
+          // older exceljs reader version trims last value
+          // if it is an empty string, so we will pad row
+          // to header length with empty string
+          rowValues = [
+            ...rowValues,
+            ...Array(headerLen - rowValues.length).fill(''),
+          ]
+        else
+          headerLen = rowValues.length
 
         rowValues = _.map(rowValues,
           item => (_.isObject(item) || _.isNil(item) ? '' : item))
@@ -135,7 +147,7 @@ test(`Writer
     .then(() => readXlsx(filePath))
     .then((data) => {
       t.equal(data.length, 2, 'Two exported rows')
-      t.deepEqual(expectedOutput, data[1], 'Mapped right values')
+      t.deepEqual(data[1], expectedOutput, 'Mapped right values')
       t.end()
     })
 })
