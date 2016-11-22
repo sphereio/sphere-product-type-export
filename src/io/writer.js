@@ -6,30 +6,24 @@ import Excel from 'exceljs'
 
 const fs = Promise.promisifyAll(require('fs'))
 
-const debugLog = _.noop
-// const debugLog = console.log
-
 export default class Writer {
   constructor (options) {
     this.options = options
 
-    debugLog('WRITER::options:', JSON.stringify(options))
-
-    this.options.availableFormats = ['xlsx', 'csv']
+    this.options.supportedFormats = ['xlsx', 'csv']
     this.options.defaultEncoding = 'utf8'
     this.options.encoding = options.encoding || this.options.defaultEncoding
 
     if (!options.outputFile)
       throw new Error('OutputFile was not specified')
 
-    if (options.availableFormats.indexOf(options.exportFormat) < 0)
+    if (options.supportedFormats.indexOf(options.exportFormat) < 0)
       throw new Error(`Unsupported file type: ${options.exportFormat}, `
-        + `alowed formats are ${options.availableFormats.toString()}`)
+        + `supported formats are ${options.supportedFormats.toString()}`)
 
     if (options.encoding && !iconv.encodingExists(options.encoding))
       throw new Error(`Encoding does not exist: ${options.encoding}`)
 
-    debugLog('WRITER::stream file %s', options.outputFile)
     this.outputStream = fs.createWriteStream(options.outputFile)
 
     // if we use xlsx export - create workbook first
@@ -54,16 +48,12 @@ export default class Writer {
 
   // create header
   setHeader (header) {
-    debugLog('WRITER::writing header of len %d', header.length)
-
     if (this.options.exportFormat === 'xlsx')
       return this._writeXlsxHeader(header)
     return this._writeCsvRows([header])
   }
 
   write (rows) {
-    debugLog('WRITER::writing rows len: %d', rows.length)
-
     if (this.options.exportFormat === 'xlsx')
       return this._writeXlsxRows(rows)
     return this._writeCsvRows(rows)
@@ -103,7 +93,6 @@ export default class Writer {
   }
 
   flush () {
-    debugLog('WRITER::flushing content')
     if (this.options.exportFormat === 'xlsx')
       return this.workbook.commit()
     return Promise.resolve()

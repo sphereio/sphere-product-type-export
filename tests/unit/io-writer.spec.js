@@ -44,9 +44,11 @@ test(`Writer
     const writer = new Writer({
       exportFormat: 'csv',
     })
-    t.fail('Should throw an error')
+    t.fail('Should throw an error "output file is not specified"' +
+      ' when creating writer object')
   } catch (e) {
-    t.equal(e.toString(), expectedOutput, 'Should throw an error')
+    t.equal(e.toString(), expectedOutput, 'Should throw an error ' +
+      '"output file is not specified" when creating writer object')
     t.end()
   }
 })
@@ -54,7 +56,7 @@ test(`Writer
 test(`Writer
   should throw an error when incorrect export format is specified`, (t) => {
   const expectedOutput = 'Error: Unsupported file type: unknown,' +
-    ' alowed formats are xlsx,csv'
+    ' supported formats are xlsx,csv'
 
   try {
     const writer = new Writer({
@@ -90,8 +92,7 @@ test(`Writer
 test(`Writer
   should return an error when writing fails`, (t) => {
   const filePath = tempWrite.sync()
-  const expectedOutput = 'TypeError: must start with number, ' +
-    'buffer, array or string'
+  const expectedOutput = 'must start with number, buffer, array or string'
 
   const writer = new Writer({
     outputFile: filePath,
@@ -101,10 +102,11 @@ test(`Writer
   try {
     writer._writeCsvRows(Buffer())
       .then(() => {
-        t.fail('Should throw an error')
+        t.fail('Should throw an error about wrong data type')
       })
   } catch (e) {
-    t.equal(e.toString(), expectedOutput, 'Should throw an error')
+    t.equal(e.message, expectedOutput, 'Should throw an error about' +
+      ' wrong data type')
     t.end()
   }
 })

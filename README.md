@@ -20,7 +20,7 @@ The configuration object may contain:
 - `config`: configuration object that may contain the following options
   - `delimiter`: the delimiter to be used in the csv (_default_: `,`)
   - `outputFolder` (_required_): the folder used to store the exported product types and attributes
-  - `exportFormat` (_optional_): output format, supported are `csv`, `xlsx` (_default_: `xlsx`)
+  - `exportFormat` (_optional_): output format, supported are `csv`, `xlsx` (_default_: `csv`)
   - `encoding` (_optional_): encoding used when saving data, supported encodings are listed [here](https://github.com/ashtuchkin/iconv-lite/wiki/Supported-Encodings) (_default_: `utf8`)
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 

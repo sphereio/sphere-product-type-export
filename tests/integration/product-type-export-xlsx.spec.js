@@ -18,10 +18,10 @@ import getSphereClientCredentials from '../../src/sphere-client-credentials'
 
 const extractArchive = Promise.promisify(extract)
 
-
 const random = () => !!Math.round(Math.random())
 
 let PROJECT_KEY
+let OUTPUT_FOLDER
 
 if (process.env.CI === 'true')
   PROJECT_KEY = process.env.SPHERE_PROJECT_KEY
@@ -195,9 +195,6 @@ const mockAttributes = mockProductTypes.reduce((attributes, type) =>
     ...attributes,
   ]
 , [])
-
-let OUTPUT_FOLDER
-
 
 const readXlsx = function readXlsx (filePath) {
   const values = []
