@@ -8,9 +8,10 @@ import tempfile from 'tempfile'
 import path from 'path'
 import iconv from 'iconv-lite'
 
-// eslint-disable-next-line max-len
-import ProductTypeExport from '../../src/product-type-export'
-import getSphereClientCredentials from '../../src/sphere-client-credentials'
+import ProductTypeExport
+  from '../../src/product-type-export'
+import getSphereClientCredentials
+  from '../../src/sphere-client-credentials'
 
 const ENCODING = 'win1250'
 let PROJECT_KEY

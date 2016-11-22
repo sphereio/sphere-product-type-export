@@ -64,7 +64,7 @@ export default class Writer {
       // clean row from undefined and empty strings
       const cleanedRow = _.map(row, (item) => {
         if (_.isNil(item))
-          return null
+          return ''
         else if (_.isBoolean(item))
           return item ? 1 : ''
         return item
