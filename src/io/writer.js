@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import stringify from 'csv-stringify'
+import csv from 'csv'
 import Promise from 'bluebird'
 import iconv from 'iconv-lite'
 import Excel from 'exceljs'
@@ -85,7 +85,7 @@ export default class Writer {
     }
 
     return new Promise(resolve =>
-      stringify(data, opts, (err, string) => {
+      csv.stringify(data, opts, (err, string) => {
         this.outputStream.write(this.encode(string))
         return resolve()
       })
