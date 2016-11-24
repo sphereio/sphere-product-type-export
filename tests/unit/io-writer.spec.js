@@ -35,82 +35,64 @@ const readXlsx = function readXlsx (filePath) {
     })
 }
 
-/* eslint-disable no-unused-vars */
 test(`Writer
   should throw an error when outputFile is not specified`, (t) => {
-  const expectedOutput = 'Error: OutputFile was not specified'
+  const expectedRegexp = new RegExp('OutputFile was not specified', 'g')
 
-  try {
-    const writer = new Writer({
-      exportFormat: 'csv',
-    })
-    t.fail('Should throw an error "output file is not specified"' +
-      ' when creating writer object')
-  } catch (e) {
-    t.equal(e.toString(), expectedOutput, 'Should throw an error ' +
-      '"output file is not specified" when creating writer object')
-    t.end()
+  const conf = {
+    exportFormat: 'csv',
   }
+
+  t.throws(() => new Writer(conf), expectedRegexp,
+    'Should throw an error when creating writer object')
+  t.end()
 })
 
 test(`Writer
   should throw an error when incorrect export format is specified`, (t) => {
-  const expectedOutput = 'Error: Unsupported file type: unknown,' +
-    ' supported formats are xlsx,csv'
+  const expectedRegexp = new RegExp('Unsupported file type: unknown,' +
+    ' supported formats are xlsx,csv', 'g')
 
-  try {
-    const writer = new Writer({
-      outputFile: 'out.csv',
-      exportFormat: 'unknown',
-    })
-
-    t.fail('Should throw an error')
-  } catch (e) {
-    t.equal(e.toString(), expectedOutput, 'Should throw an error')
-    t.end()
+  const conf = {
+    outputFile: 'out.csv',
+    exportFormat: 'unknown',
   }
+
+  t.throws(() => new Writer(conf), expectedRegexp,
+    'Should throw an error when creating writer object')
+  t.end()
 })
 
 test(`Writer
   should throw an error when incorrect encoding is specified`, (t) => {
-  const expectedOutput = 'Error: Encoding does not exist: unknown'
+  const expectedRegexp = new RegExp('Encoding does not exist: unknown', 'g')
 
-  try {
-    const writer = new Writer({
-      outputFile: 'out.csv',
-      exportFormat: 'csv',
-      encoding: 'unknown',
-    })
-
-    t.fail('Should throw an error')
-  } catch (e) {
-    t.equal(e.toString(), expectedOutput, 'Should throw an error')
-    t.end()
+  const conf = {
+    outputFile: 'out.csv',
+    exportFormat: 'csv',
+    encoding: 'unknown',
   }
+
+  t.throws(() => new Writer(conf), expectedRegexp,
+    'Should throw an error when creating writer object')
+  t.end()
 })
 
 test(`Writer
   should return an error when writing fails`, (t) => {
   const filePath = tempWrite.sync()
-  const expectedOutput = 'must start with number, buffer, array or string'
+  const expectedRegexp = new RegExp('must start with number,' +
+    ' buffer, array or string', 'g')
 
   const writer = new Writer({
     outputFile: filePath,
     exportFormat: 'csv',
   })
 
-  try {
-    writer._writeCsvRows(Buffer())
-      .then(() => {
-        t.fail('Should throw an error about wrong data type')
-      })
-  } catch (e) {
-    t.equal(e.message, expectedOutput, 'Should throw an error about' +
-      ' wrong data type')
-    t.end()
-  }
+  t.throws(() => writer._writeCsvRows(Buffer()), expectedRegexp,
+    'Should throw an error about wrong data type')
+  t.end()
 })
-/* eslint-enable no-unused-vars */
 
 test(`Writer
   should write data to csv file`, (t) => {
