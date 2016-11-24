@@ -81,17 +81,24 @@ test(`Writer
 test(`Writer
   should return an error when writing fails`, (t) => {
   const filePath = tempWrite.sync()
-  const expectedRegexp = new RegExp('must start with number,' +
-    ' buffer, array or string', 'g')
+  const expectedError = 'Mock error'
 
   const writer = new Writer({
     outputFile: filePath,
     exportFormat: 'csv',
   })
 
-  t.throws(() => writer._writeCsvRows(Buffer()), expectedRegexp,
-    'Should throw an error about wrong data type')
-  t.end()
+  // mock stringifier
+  writer.csv = {
+    stringify: (a, b, done) => done(expectedError),
+  }
+
+  writer._writeCsvRows('content')
+    .then(() => t.end('Should throw an error when stringify fails'))
+    .catch((err) => {
+      t.equal(err, expectedError, 'Should return a mocked error')
+      t.end()
+    })
 })
 
 test(`Writer

@@ -9,7 +9,7 @@ const fs = Promise.promisifyAll(require('fs'))
 export default class Writer {
   constructor (options) {
     this.options = options
-
+    this.csv = csv
     this.options.supportedFormats = ['xlsx', 'csv']
     this.options.defaultEncoding = 'utf8'
     this.options.encoding = options.encoding || this.options.defaultEncoding
@@ -84,12 +84,15 @@ export default class Writer {
       delimiter: this.options.csvDelimiter,
     }
 
-    return new Promise(resolve =>
-      csv.stringify(data, opts, (err, string) => {
+    return new Promise((resolve, reject) => {
+      this.csv.stringify(data, opts, (err, string) => {
+        if (err)
+          return reject(err)
+
         this.outputStream.write(this.encode(string))
         return resolve()
       })
-    )
+    })
   }
 
   flush () {
