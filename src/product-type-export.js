@@ -1,13 +1,14 @@
 import { Readable } from 'stream'
+import _ from 'lodash'
 import path from 'path'
 import { createWriteStream, createReadStream, mkdirSync, existsSync } from 'fs'
 import createDebug from 'debug'
-
 import tempWrite from 'temp-write'
 import tempfile from 'tempfile'
 import JSONStream from 'JSONStream'
 import JSZip from 'jszip'
 import { SphereClient } from 'sphere-node-sdk'
+import Writer from './io/writer'
 
 const debug = createDebug('product-type-export')
 
@@ -157,11 +158,12 @@ export default class ProductTypeImport {
         'Please provide a folder to export to using the "outputFolder" option.'
       )
 
-    this.config = {
-      delimiter: config.delimiter || ',',
-      compressOutput: config.compressOutput || false,
-      outputFolder: config.outputFolder,
-    }
+    this.config = _.defaults(config, {
+      delimiter: ',',
+      compressOutput: false,
+      exportFormat: 'csv',
+      encoding: 'utf8',
+    })
 
     this.summary = {
       errors: [],
@@ -182,23 +184,23 @@ export default class ProductTypeImport {
     // > all attribute names go into the list of attributes
 
     // second iteration - start writing to both files
-    // > attribute-to-type.csv
+    // > attribute-to-type:
     //   > row per product type
     //   > add an X for all attributes of the product type
     //     using the previously collected list for col pos
-    // > attributes.csv
+    // > attributes:
     //   > add a line for every attribute that is not already added
-    const { config: { outputFolder, compressOutput } } = this
+    const { config: { outputFolder, compressOutput, exportFormat } } = this
     const downloadFile = tempWrite.sync(null, 'product-types.json')
-    debug('download file location', downloadFile)
+    const productAttributesFileName = `products-to-attributes.${exportFormat}`
+    const attributesFileName = `attributes.${exportFormat}`
 
     // if the output should be compressed,
     // the csv files should stored in a temp folder
-    const csvFolder = compressOutput ? tempfile() : outputFolder
+    const outFolder = compressOutput ? tempfile() : outputFolder
     // create folders if they do not exist
-    if (!existsSync(csvFolder))
-      mkdirSync(csvFolder)
-
+    if (!existsSync(outFolder))
+      mkdirSync(outFolder)
 
     return this.downloadProductTypes(downloadFile)
     .then(() => this.collectAttributes(downloadFile))
@@ -211,11 +213,11 @@ export default class ProductTypeImport {
       Promise.all([
         this.writeProductTypes(
           productTypes,
-          path.join(csvFolder, 'products-to-attributes.csv')
+          path.join(outFolder, productAttributesFileName)
         ),
         this.writeAttributes(
           attributes,
-          path.join(csvFolder, 'attributes.csv')
+          path.join(outFolder, attributesFileName)
         ),
       ])
     )
@@ -225,11 +227,11 @@ export default class ProductTypeImport {
         zip
         .folder('product-type-export')
         .file(
-          'products-to-attributes.csv',
-          createReadStream(path.join(csvFolder, 'products-to-attributes.csv')
+          productAttributesFileName,
+          createReadStream(path.join(outFolder, productAttributesFileName)
         ))
-        .file('attributes.csv', createReadStream(
-          path.join(csvFolder, 'attributes.csv')
+        .file(attributesFileName, createReadStream(
+          path.join(outFolder, attributesFileName)
         ))
         .generateNodeStream({ streamFiles: true })
         .pipe(createWriteStream(path.join(outputFolder, 'product-types.zip')))
@@ -347,72 +349,97 @@ export default class ProductTypeImport {
   }
 
   writeProductTypes (stream, destination) {
-    return new Promise((resolve) => {
-      const { config: { delimiter } } = this
-      const writeStream = createWriteStream(destination)
+    return new Promise((resolve, reject) => {
+      const writer = new Writer({
+        exportFormat: this.config.exportFormat,
+        encoding: this.config.encoding,
+        csvDelimiter: this.config.delimiter,
+        outputFile: destination,
+      })
+
       // write header
       const header = [
         'name',
         'description',
         ...this.attributeNames,
-      ].join(delimiter)
-      writeStream.write(`${header}\n`)
-      stream.on('data', (productType) => {
-        const { name, description, attributes } = productType
-        const enabledAttributes = this.attributeNames.map((attr) => {
-          const attributeInType = attributes.includes(attr)
-          return attributeInType ? 'X' : ''
+      ]
+      writer
+        .setHeader(header)
+        .then(() => {
+          stream.on('data', (productType) => {
+            const { name, description, attributes } = productType
+            const enabledAttributes = this.attributeNames.map((attr) => {
+              const attributeInType = attributes.includes(attr)
+              return attributeInType ? 'X' : ''
+            })
+            const row = [name, description, ...enabledAttributes]
+
+            writer
+              .write([row])
+              .catch(reject)
+            this.summary.exported.productTypes += 1
+          })
+
+          stream.on('end', () => {
+            writer
+              .flush()
+              .then(resolve)
+          })
         })
-        const row = [name, description, ...enabledAttributes].join(delimiter)
-        writeStream.write(`${row}\n`)
-        this.summary.exported.productTypes += 1
-      })
-      stream.on('end', () => {
-        resolve()
-      })
     })
   }
 
   writeAttributes (stream, destination) {
-    return new Promise((resolve) => {
-      const { config: { delimiter } } = this
-      const writeStream = createWriteStream(destination)
+    return new Promise((resolve, reject) => {
+      const writer = new Writer({
+        exportFormat: this.config.exportFormat,
+        encoding: this.config.encoding,
+        csvDelimiter: this.config.delimiter,
+        outputFile: destination,
+      })
       const header = generateAttributeHeader(this.attributeKeys)
       const keys = filterAttributeKeys(this.attributeKeys)
       const numberOfRows = numberOfRowsForHeaders(this.attributeKeys)
       const typeWithValuesRegex = /type.values.(.)/
-      writeStream.write(`${header.join(delimiter)}\n`)
-      stream.on('data', (attribute) => {
-        this.summary.exported.attributes += 1
-        for (let i = 0; i < numberOfRows; i += 1) {
-          const row = keys.map((key) => {
-            // return enum fields if we are in the corresponding row
-            if (key.match(typeWithValuesRegex)) {
-              const val = getValueForKey(
-                attribute,
-                key.replace(/\.i\./, `.${i}.`)
-              )
-              // only write strings to the csv file
-              // if the value is an object it is a localized label
-              // which will be handled in another
-              // column with a more specific key
-              return typeof val === 'string' ? val : null
-            }
-            // only return "normal" values in the first row
-            // normal being the ones that are not lists like enum values
-            if (i === 0)
-              return getValueForKey(attribute, key)
+      writer
+        .setHeader(header)
+        .then(() => {
+          stream.on('data', (attribute) => {
+            this.summary.exported.attributes += 1
+            for (let i = 0; i < numberOfRows; i += 1) {
+              const row = keys.map((key) => {
+                // return enum fields if we are in the corresponding row
+                if (key.match(typeWithValuesRegex)) {
+                  const val = getValueForKey(
+                    attribute,
+                    key.replace(/\.i\./, `.${i}.`)
+                  )
+                  // only write strings to the csv file
+                  // if the value is an object it is a localized label
+                  // which will be handled in another
+                  // column with a more specific key
+                  return typeof val === 'string' ? val : null
+                }
+                // only return "normal" values in the first row
+                // normal being the ones that are not lists like enum values
+                if (i === 0)
+                  return getValueForKey(attribute, key)
 
-            return null
+                return null
+              })
+              const rowIsEmpty = row.filter(r => !!r).length === 0
+              if (!rowIsEmpty)
+                writer
+                  .write([row])
+                  .catch(reject)
+            }
           })
-          const rowIsEmpty = row.filter(r => !!r).length === 0
-          if (!rowIsEmpty)
-            writeStream.write(`${row.join(delimiter)}\n`)
-        }
-      })
-      stream.on('end', () => {
-        resolve()
-      })
+          stream.on('end', () => {
+            writer
+              .flush()
+              .then(resolve)
+          })
+        })
     })
   }
 

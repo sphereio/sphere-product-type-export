@@ -5,6 +5,8 @@ var ProjectCredentialsConfig = require('sphere-node-utils').ProjectCredentialsCo
 var ProductTypeExport = require('../dist').default
 var argv = require('minimist')(process.argv.slice(2))
 
+var supportedFormats = ['csv', 'xlsx']
+
 // product-type-export -p foo -t xxx -d ';' -o ./output
 var projectKey = argv.p || argv.projectKey
 var accessToken = argv.t || argv.accessToken
@@ -13,6 +15,13 @@ var delimiter = argv.d || argv.delimiter
 var compressOutput = argv.c || argv.compressOutput
 var sphereHost = argv.sphereHost
 var sphereProtocol = argv.sphereProtocol
+var exportFormat = argv.exportFormat || 'csv'
+var encoding = argv.encoding || 'utf8'
+
+if(supportedFormats.indexOf(exportFormat) < 0) {
+  console.error('Unknown exportFormat "%s", supported formats are %s', exportFormat, supportedFormats)
+  process.exit(1)
+}
 
 // TODO: validate options
 
@@ -41,6 +50,8 @@ getCredentials()
       outputFolder: outputFolder,
       delimiter: delimiter,
       compressOutput: compressOutput,
+      exportFormat: exportFormat,
+      encoding: encoding,
     },
   })
 
