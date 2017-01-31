@@ -141,7 +141,7 @@ const generateAttributeHeader = keys =>
     return key
   }))
 
-export default class ProductTypeImport {
+export default class ProductTypeExport {
 
   // config: {
   //   outputFolder: ''
@@ -163,6 +163,7 @@ export default class ProductTypeImport {
       compressOutput: false,
       exportFormat: 'csv',
       encoding: 'utf8',
+      productTypeFilter: '',
     })
 
     this.summary = {
@@ -250,7 +251,14 @@ export default class ProductTypeImport {
     const writeStream = createWriteStream(file)
     writeStream.write('[')
     let isFirst = true
-    return this.client.productTypes.process(({
+    const clientEndpoint = this.client.productTypes
+
+    if (this.config.productTypeFilter) {
+      const keys = this.config.productTypeFilter.replace(',', '","')
+      clientEndpoint.where(`key IN ("${keys}")`)
+    }
+
+    return clientEndpoint.process(({
       body: { results: productTypes },
     }) => {
       productTypes.forEach((productType) => {

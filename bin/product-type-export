@@ -11,6 +11,7 @@ var supportedFormats = ['csv', 'xlsx']
 var projectKey = argv.p || argv.projectKey
 var accessToken = argv.t || argv.accessToken
 var outputFolder = argv.o || argv.outputFolder
+var productTypeFilter = argv.f || argv.productTypeFilter
 var delimiter = argv.d || argv.delimiter
 var compressOutput = argv.c || argv.compressOutput
 var sphereHost = argv.sphereHost
@@ -52,6 +53,7 @@ getCredentials()
       compressOutput: compressOutput,
       exportFormat: exportFormat,
       encoding: encoding,
+      productTypeFilter: productTypeFilter,
     },
   })
 

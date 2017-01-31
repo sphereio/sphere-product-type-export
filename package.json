@@ -14,7 +14,7 @@
     "test": "cross-env NODE_ENV=test babel-node node_modules/.bin/tape tests/**/*.spec.js | tap-spec",
     "test:watch": "chokidar src tests -c 'npm test'",
     "build": "npm run clean && babel src --out-dir dist",
-    "watch": "babel src --out-dir dist --watch",
+    "watch": "babel src tests --out-dir dist --watch",
     "lint": "./scripts/lint src tests",
     "coverage": "npm run lint && npm run clean && cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text npm test",
     "semantic-release": "semantic-release pre && npm run build && npm publish && semantic-release post",
