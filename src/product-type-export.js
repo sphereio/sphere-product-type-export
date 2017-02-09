@@ -247,16 +247,19 @@ export default class ProductTypeExport {
     })
   }
 
+  addFilterCondition (client) {
+    const keys = this.config.productTypeFilter.replace(/,/g, '","')
+    return client.where(`key IN ("${keys}")`)
+  }
+
   downloadProductTypes (file) {
     const writeStream = createWriteStream(file)
     writeStream.write('[')
     let isFirst = true
     const clientEndpoint = this.client.productTypes
 
-    if (this.config.productTypeFilter) {
-      const keys = this.config.productTypeFilter.replace(',', '","')
-      clientEndpoint.where(`key IN ("${keys}")`)
-    }
+    if (this.config.productTypeFilter)
+      this.addFilterCondition(clientEndpoint)
 
     return clientEndpoint.process(({
       body: { results: productTypes },
