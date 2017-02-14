@@ -52,16 +52,16 @@ test(`getSphereClientCredentials
     })
 })
 
-test(`productType import module
+test(`productType export module
   should be class`, (t) => {
   const expected = 'function'
   const actual = typeof ProductTypeExport
 
-  t.equal(actual, expected, 'productType import module is a function')
+  t.equal(actual, expected, 'productType export module is a function')
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should create a sphere client`, (t) => {
   const exporter = new ProductTypeExport(options)
   const expected = SphereClient
@@ -70,12 +70,12 @@ test(`productType import module
   t.equal(
     actual,
     expected,
-    'productType import module is an instanceof SphereClient'
+    'productType export module is an instanceof SphereClient'
   )
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   summaryReport should return no errors and no exported product-types
     if no product-types were exported`, (t) => {
   const exporter = new ProductTypeExport(options)
@@ -92,7 +92,7 @@ test(`productType import module
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should throw an error if the output folder is not given`, (t) => {
   const noConfigOptions = {
     ...options,
@@ -103,7 +103,7 @@ test(`productType import module
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should use a comma as default delimiter`, (t) => {
   const exporter = new ProductTypeExport(options)
 
@@ -111,3 +111,26 @@ test(`productType import module
 
   t.end()
 })
+
+test(`productType export module
+  should filter productTypes`, (t) => {
+  const exporter = new ProductTypeExport(options)
+  const expectedFilter = 'key IN ("a","b","c","d")'
+  const mockClient = {
+    condition: '',
+    where (params) {
+      this.condition = params
+    },
+  }
+
+  t.equal(exporter.config.productTypeFilter, '',
+    'productTypeFilter is empty by default')
+  exporter.config.productTypeFilter = 'a,b,c,d'
+
+  exporter.addFilterCondition(mockClient)
+  t.equal(mockClient.condition, expectedFilter,
+    'productType export has expected filter')
+
+  t.end()
+})
+

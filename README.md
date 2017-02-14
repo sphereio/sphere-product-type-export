@@ -22,6 +22,7 @@ The configuration object may contain:
   - `outputFolder` (_required_): the folder used to store the exported product types and attributes
   - `exportFormat` (_optional_): output format, supported are `csv`, `xlsx` (_default_: `csv`)
   - `encoding` (_optional_): encoding used when saving data, supported encodings are listed [here](https://github.com/ashtuchkin/iconv-lite/wiki/Supported-Encodings) (_default_: `utf8`)
+  - `productTypeFilter` (_optional_): comma separated list of productType keys which should be exported (_default_: empty string)
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 
 ## Usage

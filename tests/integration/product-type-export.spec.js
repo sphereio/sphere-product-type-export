@@ -1,4 +1,5 @@
 import 'babel-polyfill'
+import _ from 'lodash'
 import test from 'tape'
 import tempWrite from 'temp-write'
 import { SphereClient } from 'sphere-node-sdk'
@@ -187,6 +188,7 @@ const deleteAll = (service, client) =>
 let client
 let productTypeExport
 let sphereClientConfig
+let mockKeys = []
 const testProductTypes = Array.from(new Array(5), () => createProductType())
 const mockProductTypes = testProductTypes.map(type => ({
   ...type, attributes: type.attributes.filter(a => !!a),
@@ -218,6 +220,8 @@ const before = function setup () {
         sphereClientConfig: options,
         config: { outputFolder: OUTPUT_FOLDER },
       })
+
+      mockKeys = _.map(mockProductTypes, 'key')
       return deleteAll('productTypes', client)
       .then(() =>
         Promise.all(mockProductTypes.map(productType =>
@@ -239,6 +243,39 @@ test(`productType export module
       const productTypes = JSON.parse(file)
       const actualKeys = productTypes.map(({ key }) => key)
       const expectedKeys = mockProductTypes.map(({ key }) => key)
+      expectedKeys.forEach((key) => {
+        t.ok(
+          actualKeys.includes(key),
+          `ProductType key '${key}' is present in the file`
+        )
+      })
+      t.end()
+    })
+  }).catch(t.end)
+})
+
+test(`productType export module
+  should download only selected product types into a file`, (t) => {
+  t.timeoutAfter(15000) // 15s
+
+  before().then(() => {
+    const expectedKeys = mockKeys.slice(0, 2)
+    const downloadFolder = tempWrite.sync()
+
+    const productTypeExportCompress = new ProductTypeExport({
+      sphereClientConfig,
+      config: {
+        outputFolder: OUTPUT_FOLDER,
+        productTypeFilter: expectedKeys.join(','),
+      },
+    })
+
+    productTypeExportCompress.downloadProductTypes(downloadFolder)
+    .then(() => {
+      // check file
+      const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
+      const productTypes = JSON.parse(file)
+      const actualKeys = _.map(productTypes, 'key')
       expectedKeys.forEach((key) => {
         t.ok(
           actualKeys.includes(key),
