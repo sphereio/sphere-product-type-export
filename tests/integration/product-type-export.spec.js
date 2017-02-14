@@ -266,7 +266,7 @@ test(`productType export module
       sphereClientConfig,
       config: {
         outputFolder: OUTPUT_FOLDER,
-        productTypeFilter: expectedKeys.join(','),
+        where: `key IN ("${expectedKeys.join('","')}")`,
       },
     })
 
@@ -276,6 +276,13 @@ test(`productType export module
       const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
       const productTypes = JSON.parse(file)
       const actualKeys = _.map(productTypes, 'key')
+
+      t.equal(
+        actualKeys.length,
+        expectedKeys.length,
+        'Correct count of exported ProductTypes'
+      )
+
       expectedKeys.forEach((key) => {
         t.ok(
           actualKeys.includes(key),
