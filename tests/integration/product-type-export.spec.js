@@ -576,7 +576,7 @@ test(`productType export module
 
 test(`productType export module
   should output a product types and an attributes file`, (t) => {
-  t.timeoutAfter(15000) // 15s
+  t.timeoutAfter(25000) // 25s
   before().then(() => {
     productTypeExport.run()
     .then(() => {
