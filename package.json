@@ -95,7 +95,7 @@
     "jszip": "^3.0.0",
     "lodash": "^4.16.6",
     "minimist": "^1.2.0",
-    "sphere-node-sdk": "^1.10.1",
+    "sphere-node-sdk": "^1.17.5",
     "sphere-node-utils": "^0.8.1",
     "tape": "^4.6.0",
     "temp-write": "^2.1.0",
