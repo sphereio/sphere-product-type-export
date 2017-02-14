@@ -1,4 +1,5 @@
 import { SphereClient } from 'sphere-node-sdk'
+import _ from 'lodash'
 import test from 'tape'
 import ProductTypeExport from '../../src'
 import getSphereClientCredentials from '../../src/sphere-client-credentials'
@@ -113,9 +114,9 @@ test(`productType export module
 })
 
 test(`productType export module
-  should filter productTypes`, (t) => {
-  const exporter = new ProductTypeExport(options)
-  const expectedFilter = 'key IN ("a","b","c","d")'
+  should filter productTypes if where parameter is present`, (t) => {
+  const exporter = new ProductTypeExport(_.cloneDeep(options))
+  const expectedFilter = 'key IN ("a", "b")'
   const mockClient = {
     condition: '',
     where (params) {
@@ -123,11 +124,30 @@ test(`productType export module
     },
   }
 
-  t.equal(exporter.config.productTypeFilter, '',
-    'productTypeFilter is empty by default')
-  exporter.config.productTypeFilter = 'a,b,c,d'
+  t.equal(exporter.config.where, '',
+    'where filter is empty by default')
+  exporter.config.where = 'key IN ("a", "b")'
 
-  exporter.addFilterCondition(mockClient)
+  exporter.client.productTypes = mockClient
+  exporter.getProductTypeClient()
+  t.equal(mockClient.condition, expectedFilter,
+    'productType export has expected filter')
+
+  t.end()
+})
+
+test(`productType export module
+  should not filter productTypes if where parameter is not present`, (t) => {
+  const exporter = new ProductTypeExport(options)
+  const expectedFilter = null
+  const mockClient = {
+    condition: null,
+    where (params) {
+      this.condition = params
+    },
+  }
+  exporter.client.productTypes = mockClient
+  exporter.getProductTypeClient()
   t.equal(mockClient.condition, expectedFilter,
     'productType export has expected filter')
 
