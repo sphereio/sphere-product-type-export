@@ -50,13 +50,13 @@ const config = {
     }
   }
 }
-const productTypeImport = ProductTypeExport(config)
+const productTypeExport = ProductTypeExport(config)
 
 productTypeExport.run()
 .then(() => {
   // done exporting the productType
   // look at the summary to see errors
-  productTypeImport.summary
+  productTypeExport.summary
   // the summary hast the following structure
   // {
   //   errors: [],
