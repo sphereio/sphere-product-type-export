@@ -1,4 +1,5 @@
 import { SphereClient } from 'sphere-node-sdk'
+import _ from 'lodash'
 import test from 'tape'
 import ProductTypeExport from '../../src'
 import getSphereClientCredentials from '../../src/sphere-client-credentials'
@@ -52,16 +53,16 @@ test(`getSphereClientCredentials
     })
 })
 
-test(`productType import module
+test(`productType export module
   should be class`, (t) => {
   const expected = 'function'
   const actual = typeof ProductTypeExport
 
-  t.equal(actual, expected, 'productType import module is a function')
+  t.equal(actual, expected, 'productType export module is a function')
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should create a sphere client`, (t) => {
   const exporter = new ProductTypeExport(options)
   const expected = SphereClient
@@ -70,12 +71,12 @@ test(`productType import module
   t.equal(
     actual,
     expected,
-    'productType import module is an instanceof SphereClient'
+    'productType export module is an instanceof SphereClient'
   )
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   summaryReport should return no errors and no exported product-types
     if no product-types were exported`, (t) => {
   const exporter = new ProductTypeExport(options)
@@ -92,7 +93,7 @@ test(`productType import module
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should throw an error if the output folder is not given`, (t) => {
   const noConfigOptions = {
     ...options,
@@ -103,7 +104,7 @@ test(`productType import module
   t.end()
 })
 
-test(`productType import module
+test(`productType export module
   should use a comma as default delimiter`, (t) => {
   const exporter = new ProductTypeExport(options)
 
@@ -111,3 +112,45 @@ test(`productType import module
 
   t.end()
 })
+
+test(`productType export module
+  should filter productTypes if where parameter is present`, (t) => {
+  const exporter = new ProductTypeExport(_.cloneDeep(options))
+  const expectedFilter = 'key IN ("a", "b")'
+  const mockClient = {
+    condition: '',
+    where (params) {
+      this.condition = params
+    },
+  }
+
+  t.equal(exporter.config.where, '',
+    'where filter is empty by default')
+  exporter.config.where = 'key IN ("a", "b")'
+
+  exporter.client.productTypes = mockClient
+  exporter.getProductTypeClient()
+  t.equal(mockClient.condition, expectedFilter,
+    'productType export has expected filter')
+
+  t.end()
+})
+
+test(`productType export module
+  should not filter productTypes if where parameter is not present`, (t) => {
+  const exporter = new ProductTypeExport(options)
+  const expectedFilter = null
+  const mockClient = {
+    condition: null,
+    where (params) {
+      this.condition = params
+    },
+  }
+  exporter.client.productTypes = mockClient
+  exporter.getProductTypeClient()
+  t.equal(mockClient.condition, expectedFilter,
+    'productType export has expected filter')
+
+  t.end()
+})
+
