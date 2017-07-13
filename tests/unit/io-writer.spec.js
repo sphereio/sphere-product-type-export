@@ -104,7 +104,7 @@ test(`Writer
 test(`Writer
   should write data to csv file`, (t) => {
   const filePath = tempWrite.sync()
-  const expectedOutput = ',,,1,1,2,0,-1,str'
+  const expectedOutput = ',,false,true,1,2,0,-1,str'
   const row = [null, undefined, false, true, 1, 2, 0, -1, 'str']
 
   const writer = new Writer({
@@ -124,7 +124,7 @@ test(`Writer
   should write data to xlsx file`, (t) => {
   const filePath = tempWrite.sync()
   const header = 'num,num0,num1,num2,string,undefined,null,true,false'
-  const expectedOutput = [-1, 0, 1, 2, 'abcd', '', '', 1, '']
+  const expectedOutput = [-1, 0, 1, 2, 'abcd', '', '', 'true', 'false']
   const row = [-1, 0, 1, 2, 'abcd', undefined, null, true, false]
 
   const writer = new Writer({
