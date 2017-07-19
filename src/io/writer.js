@@ -66,7 +66,7 @@ export default class Writer {
         if (_.isNil(item))
           return ''
         else if (_.isBoolean(item))
-          return item ? 1 : ''
+          return String(item)
         return item
       })
 
@@ -82,6 +82,9 @@ export default class Writer {
   _writeCsvRows (data) {
     const opts = {
       delimiter: this.options.csvDelimiter,
+      formatters: {
+        bool: value => String(value),
+      },
     }
 
     return new Promise((resolve, reject) => {

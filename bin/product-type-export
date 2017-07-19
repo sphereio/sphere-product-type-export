@@ -19,6 +19,11 @@ var sphereProtocol = argv.sphereProtocol
 var exportFormat = argv.exportFormat || 'csv'
 var encoding = argv.encoding || 'utf8'
 
+if(!projectKey) {
+  console.error('Use -p parameter to set a projectKey')
+  process.exit(1)
+}
+
 if(supportedFormats.indexOf(exportFormat) < 0) {
   console.error('Unknown exportFormat "%s", supported formats are %s', exportFormat, supportedFormats)
   process.exit(1)

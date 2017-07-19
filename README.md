@@ -27,10 +27,51 @@ The configuration object may contain:
 
 ## Usage
 
+This module can be used as a command line tool as well as a node.js module.
+
+### CLI
+Before using this module in the command line, install it with a `global` flag.
+```sh
+npm install sphere-product-type-export -g
+```
+
+#### Command
+Command accepts following arguments:
+- The `--projectKey` or `-p` parameter is required and contains a project key which should be used when exporting productTypes. 
+- The `--outputFolder` or `-o` parameter is required and contains a path to an output folder where the output will be saved. 
+- The `--accessToken` or `-t` parameter tells module if it should use access token instead of clientId and clientSecret. 
+- The `--sphereHost` parameter tells module whether to use a different API URL. 
+- The `--sphereProtocol` parameter tells module whether to use a different protocol. 
+- The `--where` or `-w` parameter can be used for filtering productTypes before exporting.
+- The `--exportFormat` parameter specifies in which format (CSV or XLSX) shoud it save exported productTypes (default is CSV). 
+- The `--delimiter` or `-d` parameter specifies what delimiter should be used when exporting to CSV (default is ',').
+- The `--compressOutput` or `-c` parameter specifies whether to archive export files after export is done (default is false). 
+- The `--encoding` parameter specifies in which encoding should be exported CSV files (default is utf8). 
+
+To export all productTypes in the CSV format we can run this command:
+```bash
+product-type-export -p project-key -o tmp
+```
+
+#### Output
+```sh
+Export successful!
+{
+  "errors": [],
+  "exported": {
+    "productTypes": 3,
+    "attributes": 18
+  }
+}
+```
+In the `tmp` folder there will be created two files `attributes.csv` and `products-to-attributes.csv` which describe exported productTypes.
+
+
+### JS
 If you want more control, you can also use this library directly in JavaScript. To do this you first need to install it:
 
 ```sh
-npm install sphere-product-type-export --save-dev
+npm install sphere-product-type-export --save
 ```
 
 Then you can use it to export product types like so:
@@ -38,10 +79,6 @@ Then you can use it to export product types like so:
 ```js
 export ProductTypeExport from 'sphere-product-type-export'
 
-const productType = {
-  name: '<some-name>',
-  description: '<some-description>'
-}
 const config = {
   sphereClientConfig: {
     config: {
@@ -49,6 +86,14 @@ const config = {
       client_id: '*********',
       client_secret: '*********'
     }
+  },
+  config: {
+    outputFolder: '',
+    delimiter: '',       // default: ,
+    compressOutput: '',  // default: false
+    exportFormat: '',    // default: csv
+    encoding: '',        // default: utf8
+    where: '',           // default: ''
   }
 }
 const productTypeExport = ProductTypeExport(config)

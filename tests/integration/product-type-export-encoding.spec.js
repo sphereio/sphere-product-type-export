@@ -94,19 +94,19 @@ test(`productType export module
   const expectedFileName1 = 'attributes.csv'
   const expectedFileName2 = 'products-to-attributes.csv'
 
-  const expectedResult1 = 'name,type,attributeConstraint,isRequired,' +
-    'isSearchable,label.en,label.de,textInputHint,displayGroup\nbreite,' +
-    'number,None,,,žluťoučký kůň úpěl ďábelské ódy,ě=ášéýřéý=čáěéžěížěé,' +
-    'SingleLine,Other\n'
-  const expectedResult2 = 'name,description,breite\ncustom-product-type,' +
-    'Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
+  const expectedResult1 = 'name,type,attributeConstraint,isRequired,'
+    + 'isSearchable,label.en,label.de,textInputHint,displayGroup\nbreite,number'
+    + ',None,false,false,žluťoučký kůň úpěl ďábelské ódy,ě=ášéýřéý=čáěéžěížěé'
+    + ',SingleLine,Other\n'
+  const expectedResult2 = 'name,description,breite\ncustom-product-type,'
+    + 'Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
-  const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,' +
-    'isSearchable,label.en,label.de,textInputHint,' +
-    'displayGroup\nbreite,number,None,' +
-    ',,�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
-  const expectedEncoded2 = 'name,description,breite\ncustom-product-type,' +
-    'Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
+  const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,'
+    + 'isSearchable,label.en,label.de,textInputHint,'
+    + 'displayGroup\nbreite,number,None,false,false,'
+    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
+  const expectedEncoded2 = 'name,description,breite\ncustom-product-type,'
+    + 'Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
 
   before().then(() => productTypeExport.run())
   .then(() =>
