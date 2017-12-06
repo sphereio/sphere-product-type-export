@@ -108,7 +108,7 @@ test(`productType export module
   const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,'
     + 'isSearchable,label.en,label.de,textInputHint,'
     + 'displayGroup\nbreite,number,None,false,false,'
-    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=������=��������,SingleLine,Other\n'
+    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
   const expectedEncoded2 = 'name,key,description,breite\ncustom-product-type,'
     + 'productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
 
