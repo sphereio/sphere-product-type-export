@@ -232,7 +232,7 @@ const before = function setup () {
 }
 test(`productType export module
   should download all product types into a file`, (t) => {
-  t.timeoutAfter(15000) // 15s
+  t.timeoutAfter(30000) // 30s
 
   before().then(() => {
     const downloadFolder = tempWrite.sync()
@@ -313,10 +313,11 @@ test(`productType export module
       productTypes.on('end', () => {
         attributes.on('end', () => {
           mockProductTypes.forEach((
-            { name, description, attributes: typeAttrs }
+            { name, key, description, attributes: typeAttrs }
           ) => {
             const expectedType = {
               name,
+              key,
               description,
               attributes: typeAttrs.map(attr => attr.name),
             }
@@ -444,7 +445,7 @@ test(`writeProductTypes
         if (i === 0)
           t.equal(
             row,
-            `name,description,${attributes}`,
+            `name,key,description,${attributes}`,
             `exported row ${row} is equal`
           )
         // only testing the header row, the rest can be unit tested

@@ -264,7 +264,7 @@ test(`writeProductTypes to xlsx
         const header = data[0].join(',')
         t.equal(
           header,
-          `name,description,${attributes}`,
+          `name,key,description,${attributes}`,
           `exported row ${header} is equal`
         )
         t.end()

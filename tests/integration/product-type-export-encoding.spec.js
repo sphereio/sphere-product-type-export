@@ -60,7 +60,7 @@ const mockProductTypes = testProductTypes.map(type => ({
 
 let OUTPUT_FOLDER
 
-const before = function setup () {
+const before = function setup (keys) {
   OUTPUT_FOLDER = tempfile()
   fs.mkdirSync(OUTPUT_FOLDER)
   return getSphereClientCredentials(PROJECT_KEY)
@@ -79,9 +79,13 @@ const before = function setup () {
       })
       return deleteAll('productTypes', client)
       .then(() =>
-        Promise.all(mockProductTypes.map(productType =>
-          client.productTypes.create(productType)
-        ))
+        Promise.all(mockProductTypes.map((productType, index) => {
+          const productTypeDraft = JSON.parse(JSON.stringify(productType))
+          if (keys && keys[index])
+            productTypeDraft.key = keys[index]
+
+          return client.productTypes.create(productTypeDraft)
+        }))
       )
     })
 }
@@ -90,25 +94,25 @@ test(`productType export module
   should output a product types and an attributes `
   + `file using a ${ENCODING} encoding`, (t) => {
   t.timeoutAfter(15000) // 15s
+  const productTypeKey = 'productTypeKey'
 
   const expectedFileName1 = 'attributes.csv'
   const expectedFileName2 = 'products-to-attributes.csv'
-
   const expectedResult1 = 'name,type,attributeConstraint,isRequired,'
     + 'isSearchable,label.en,label.de,textInputHint,displayGroup\nbreite,number'
     + ',None,false,false,žluťoučký kůň úpěl ďábelské ódy,ě=ášéýřéý=čáěéžěížěé'
     + ',SingleLine,Other\n'
-  const expectedResult2 = 'name,description,breite\ncustom-product-type,'
-    + 'Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
+  const expectedResult2 = 'name,key,description,breite\ncustom-product-type,'
+    + 'productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
   const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,'
     + 'isSearchable,label.en,label.de,textInputHint,'
     + 'displayGroup\nbreite,number,None,false,false,'
-    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
-  const expectedEncoded2 = 'name,description,breite\ncustom-product-type,'
-    + 'Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
+    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=������=��������,SingleLine,Other\n'
+  const expectedEncoded2 = 'name,key,description,breite\ncustom-product-type,'
+    + 'productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
 
-  before().then(() => productTypeExport.run())
+  before([productTypeKey]).then(() => productTypeExport.run())
   .then(() =>
     new Promise((resolve) => {
       glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
@@ -141,9 +145,9 @@ test(`productType export module
     t.equal(fileContent2.toString(), expectedEncoded2,
       `ProductType should be encoded in ${ENCODING}`)
 
-    t.equal(expectedResult1, decoded1,
+    t.equal(decoded1, expectedResult1,
       'Attributes should decode back to utf8')
-    t.equal(expectedResult2, decoded2,
+    t.equal(decoded2, expectedResult2,
       'ProductType should decode back to utf8')
 
     t.end()

@@ -327,7 +327,7 @@ export default class ProductTypeExport {
     // pass [true] to get one product type at a time
     const productTypesInputStream = readStream.pipe(JSONStream.parse([true]))
     productTypesInputStream.on('data', (productType) => {
-      const { name, description, attributes: typeAttributes } = productType
+      const { name, key, description, attributes: typeAttributes } = productType
       // collect all attribute names that the product type contains
       const attrNames = typeAttributes.map((attr) => {
         // push all new attribute names to the store
@@ -340,6 +340,7 @@ export default class ProductTypeExport {
       })
       productTypesOutputStream.push(JSON.stringify({
         name,
+        key,
         description,
         attributes: attrNames,
       }))
@@ -372,6 +373,7 @@ export default class ProductTypeExport {
       // write header
       const header = [
         'name',
+        'key',
         'description',
         ...this.attributeNames,
       ]
@@ -379,12 +381,12 @@ export default class ProductTypeExport {
         .setHeader(header)
         .then(() => {
           stream.on('data', (productType) => {
-            const { name, description, attributes } = productType
+            const { name, key, description, attributes } = productType
             const enabledAttributes = this.attributeNames.map((attr) => {
               const attributeInType = attributes.includes(attr)
               return attributeInType ? 'X' : ''
             })
-            const row = [name, description, ...enabledAttributes]
+            const row = [name, key || '', description, ...enabledAttributes]
 
             writer
               .write([row])
