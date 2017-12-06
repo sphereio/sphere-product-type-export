@@ -205,7 +205,7 @@ const mockAttributes = mockProductTypes.reduce((attributes, type) =>
 
 let OUTPUT_FOLDER
 
-const before = function setup () {
+const before = function setup (keys) {
   OUTPUT_FOLDER = tempfile()
   fs.mkdirSync(OUTPUT_FOLDER)
   return getSphereClientCredentials(PROJECT_KEY)
@@ -224,12 +224,20 @@ const before = function setup () {
       mockKeys = _.map(mockProductTypes, 'key')
       return deleteAll('productTypes', client)
       .then(() =>
-        Promise.all(mockProductTypes.map(productType =>
-          client.productTypes.create(productType)
-        ))
+        Promise.all(mockProductTypes.map((productType, index) => {
+          const productTypeDraft = JSON.parse(JSON.stringify(productType))
+          if (keys)
+            if (keys[index])
+              productTypeDraft.key = keys[index]
+            else if (keys[index] === null)
+              delete productTypeDraft.key
+
+          return client.productTypes.create(productTypeDraft)
+        }))
       )
     })
 }
+
 test(`productType export module
   should download all product types into a file`, (t) => {
   t.timeoutAfter(30000) // 30s
@@ -578,7 +586,7 @@ test(`productType export module
 test(`productType export module
   should output a product types and an attributes file`, (t) => {
   t.timeoutAfter(25000) // 25s
-  before().then(() => {
+  before([null]).then(() => {
     productTypeExport.run()
     .then(() => {
       glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
