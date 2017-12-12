@@ -54,7 +54,7 @@ export const sortAttributes = attributes =>
 const filterDuplicates = arr =>
   arr.reduce((acc, val) =>
     acc.concat(!acc.includes(val) ? val : null)
-  , []).filter(e => !!e)
+    , []).filter(e => !!e)
 
 const extractKeys = (obj) => {
   const keys = Object.keys(obj).reduce((acc, key) => {
@@ -142,7 +142,6 @@ const generateAttributeHeader = keys =>
   }))
 
 export default class ProductTypeExport {
-
   // config: {
   //   outputFolder: ''
   //   delimiter: ','
@@ -204,47 +203,49 @@ export default class ProductTypeExport {
       mkdirSync(outFolder)
 
     return this.downloadProductTypes(downloadFile)
-    .then(() => this.collectAttributes(downloadFile))
-    .then(({ attributeNames, attributeKeys }) => {
-      this.attributeNames = sortAttributes(attributeNames)
-      this.attributeKeys = sortAttributes(attributeKeys)
-      return this.collectTypesAndAttributes(downloadFile)
-    })
-    .then(({ productTypes, attributes }) =>
-      Promise.all([
-        this.writeProductTypes(
-          productTypes,
-          path.join(outFolder, productAttributesFileName)
-        ),
-        this.writeAttributes(
-          attributes,
-          path.join(outFolder, attributesFileName)
-        ),
-      ])
-    )
-    .then(() =>
-      (compressOutput ? new Promise((resolve, reject) => {
-        const zip = new JSZip()
-        zip
-        .folder('product-type-export')
-        .file(
-          productAttributesFileName,
-          createReadStream(path.join(outFolder, productAttributesFileName)
-        ))
-        .file(attributesFileName, createReadStream(
-          path.join(outFolder, attributesFileName)
-        ))
-        .generateNodeStream({ streamFiles: true })
-        .pipe(createWriteStream(path.join(outputFolder, 'product-types.zip')))
-        .on('finish', () => {
-          resolve()
-        })
-        .on('error', reject)
-      }) : Promise.resolve())
-    )
-    .catch((err) => {
-      this.summary.errors.push(err)
-    })
+      .then(() => this.collectAttributes(downloadFile))
+      .then(({ attributeNames, attributeKeys }) => {
+        this.attributeNames = sortAttributes(attributeNames)
+        this.attributeKeys = sortAttributes(attributeKeys)
+        return this.collectTypesAndAttributes(downloadFile)
+      })
+      .then(({ productTypes, attributes }) =>
+        Promise.all([
+          this.writeProductTypes(
+            productTypes,
+            path.join(outFolder, productAttributesFileName)
+          ),
+          this.writeAttributes(
+            attributes,
+            path.join(outFolder, attributesFileName)
+          ),
+        ])
+      )
+      .then(() =>
+        (compressOutput ? new Promise((resolve, reject) => {
+          const zip = new JSZip()
+          zip
+            .folder('product-type-export')
+            .file(
+              productAttributesFileName,
+              createReadStream(path.join(outFolder, productAttributesFileName)
+              ))
+            .file(attributesFileName, createReadStream(
+              path.join(outFolder, attributesFileName)
+            ))
+            .generateNodeStream({ streamFiles: true })
+            .pipe(
+              createWriteStream(path.join(outputFolder, 'product-types.zip'))
+            )
+            .on('finish', () => {
+              resolve()
+            })
+            .on('error', reject)
+        }) : Promise.resolve())
+      )
+      .catch((err) => {
+        this.summary.errors.push(err)
+      })
   }
 
   getProductTypeClient () {
@@ -262,22 +263,22 @@ export default class ProductTypeExport {
     let isFirst = true
 
     return this.getProductTypeClient()
-    .process(({
-      body: { results: productTypes },
-    }) => {
-      productTypes.forEach((productType) => {
-        if (!isFirst)
-          writeStream.write(',\n')
+      .process(({
+        body: { results: productTypes },
+      }) => {
+        productTypes.forEach((productType) => {
+          if (!isFirst)
+            writeStream.write(',\n')
 
-        isFirst = false
-        writeStream.write(JSON.stringify(productType))
+          isFirst = false
+          writeStream.write(JSON.stringify(productType))
+        })
+        return Promise.resolve()
+      }).then(() => {
+        writeStream.write(']')
+        debug('product types downloaded')
+        return Promise.resolve()
       })
-      return Promise.resolve()
-    }).then(() => {
-      writeStream.write(']')
-      debug('product types downloaded')
-      return Promise.resolve()
-    })
   }
   // eslint-disable-next-line class-methods-use-this
   collectAttributes (file) {
@@ -456,5 +457,4 @@ export default class ProductTypeExport {
         })
     })
   }
-
 }

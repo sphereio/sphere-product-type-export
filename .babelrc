@@ -1,0 +1,11 @@
+{
+  "presets": [
+    "es2015",
+    "stage-0"
+  ],
+  "plugins": [
+    "transform-async-to-generator",
+    "istanbul",
+    "transform-async-to-generator"
+  ]
+}
