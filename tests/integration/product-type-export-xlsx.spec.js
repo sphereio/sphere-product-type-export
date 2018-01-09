@@ -66,21 +66,21 @@ async function before () {
 test(`writeProductTypes to xlsx
   should write product type to attribute mapping xlsx file`, async (t) => {
     t.timeoutAfter(15000) // 15s
-    const download = tempWrite.sync()
+    const productTypesFile = tempWrite.sync()
     const destination = tempWrite.sync()
 
     try {
       await before()
-      await productTypeExport.downloadProductTypes(download)
+      await productTypeExport.downloadProductTypes(productTypesFile)
 
       const {
         attributeNames,
-      } = await productTypeExport.collectAttributes(download)
+      } = await productTypeExport.collectAttributes(productTypesFile)
       productTypeExport.attributeNames = attributeNames
 
       const {
         productTypes,
-      } = await productTypeExport.collectTypesAndAttributes(download)
+      } = await productTypeExport.collectTypesAndAttributes(productTypesFile)
       await productTypeExport.writeProductTypes(productTypes, destination)
 
       const data = await readXlsx(destination)
@@ -100,22 +100,22 @@ test(`writeProductTypes to xlsx
 test(`productType xlsx export module
   should write to attributes with all properties to xlsx file`, async (t) => {
     t.timeoutAfter(15000) // 15s
-    const download = tempWrite.sync()
+    const productTypesFile = tempWrite.sync()
     const destination = tempWrite.sync(null, 'output.xlsx')
 
     try {
       await before()
-      await productTypeExport.downloadProductTypes(download)
+      await productTypeExport.downloadProductTypes(productTypesFile)
       const {
         attributeNames,
         attributeKeys,
-      } = await productTypeExport.collectAttributes(download)
+      } = await productTypeExport.collectAttributes(productTypesFile)
 
       productTypeExport.attributeNames = sortAttributes(attributeNames)
       productTypeExport.attributeKeys = sortAttributes(attributeKeys)
       const {
         attributes,
-      } = await productTypeExport.collectTypesAndAttributes(download)
+      } = await productTypeExport.collectTypesAndAttributes(productTypesFile)
 
       await productTypeExport.writeAttributes(attributes, destination)
       const data = await readXlsx(destination)
