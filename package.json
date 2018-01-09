@@ -90,7 +90,6 @@
     "debug": "^2.2.0",
     "exceljs": "^0.2.35",
     "extract-zip": "^1.5.0",
-    "ghooks": "^1.0.3",
     "glob": "^7.0.5",
     "iconv-lite": "^0.4.13",
     "jszip": "^3.0.0",
