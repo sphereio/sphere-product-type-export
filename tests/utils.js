@@ -8,7 +8,7 @@ export const PROJECT_KEY = process.env.CI === 'true'
   ? process.env.SPHERE_PROJECT_KEY
   : process.env.npm_config_projectkey
 
-export async function getClientConfig (projectKey = PROJECT_KEY) {
+export function getClientConfig (projectKey = PROJECT_KEY) {
   return getSphereClientCredentials(projectKey)
 }
 

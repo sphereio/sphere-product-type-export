@@ -490,7 +490,6 @@ test(`productType export module
     const expectedContent = `name,key,description
 test-product-type,,Test product type
 `
-
     try {
       await before()
       await utils.deleteAll('productTypes', client)
