@@ -45,11 +45,11 @@ test(`productType export module
     t.timeoutAfter(30000) // 30s
 
     before().then(() => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
+      const downloadFile = tempWrite.sync()
+      productTypeExport.downloadProductTypes(downloadFile)
         .then(() => {
           // check file
-          const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
+          const file = fs.readFileSync(downloadFile, { encoding: 'utf8' })
           const productTypes = JSON.parse(file)
           const actualKeys = productTypes.map(({ key }) => key)
           const expectedKeys = mockProductTypes.map(({ key }) => key)
@@ -70,7 +70,7 @@ test(`productType export module
 
     before().then(() => {
       const expectedKeys = mockKeys.slice(0, 2)
-      const downloadFolder = tempWrite.sync()
+      const downloadFile = tempWrite.sync()
 
       const productTypeExportCompress = new ProductTypeExport({
         sphereClientConfig,
@@ -80,10 +80,10 @@ test(`productType export module
         },
       })
 
-      productTypeExportCompress.downloadProductTypes(downloadFolder)
+      productTypeExportCompress.downloadProductTypes(downloadFile)
         .then(() => {
           // check file
-          const file = fs.readFileSync(downloadFolder, { encoding: 'utf8' })
+          const file = fs.readFileSync(downloadFile, { encoding: 'utf8' })
           const productTypes = JSON.parse(file)
           const actualKeys = _.map(productTypes, 'key')
 
@@ -108,9 +108,9 @@ test(`productType export module
   should read product types one by one from downloaded file`, (t) => {
     t.timeoutAfter(15000) // 15s
     before().then(() => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
-        .then(() => productTypeExport.collectTypesAndAttributes(downloadFolder))
+      const downloadFile = tempWrite.sync()
+      productTypeExport.downloadProductTypes(downloadFile)
+        .then(() => productTypeExport.collectTypesAndAttributes(downloadFile))
         .then(({ productTypes, attributes }) => {
           const actualTypes = []
           const actualAttributes = []
@@ -161,9 +161,9 @@ test(`productType export module
   should return all unique attributes in the product types`, (t) => {
     t.timeoutAfter(15000) // 15s
     before().then(() => {
-      const downloadFolder = tempWrite.sync()
-      productTypeExport.downloadProductTypes(downloadFolder)
-        .then(() => productTypeExport.collectAttributes(downloadFolder))
+      const downloadFile = tempWrite.sync()
+      productTypeExport.downloadProductTypes(downloadFile)
+        .then(() => productTypeExport.collectAttributes(downloadFile))
         .then(({ attributeNames, attributeKeys }) => {
           // should have collected all attributes
           mockProductTypes.forEach((type) => {
