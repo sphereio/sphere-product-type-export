@@ -20,8 +20,8 @@ const createProductType = () => ({
     {
       name: 'breite',
       label: {
-        de: 'ě=ášéýřéý=čáěéžěížěé',
-        en: 'žluťoučký kůň úpěl ďábelské ódy',
+        en: 'EN:žluťoučký kůň úpěl ďábelské ódy',
+        de: 'DE:ě=ášéýřéý=čáěéžěížěé',
       },
       type: {
         name: 'number',
@@ -65,19 +65,19 @@ test(`productType export module
   t.timeoutAfter(15000) // 15s
   const expectedFileName1 = 'attributes.csv'
   const expectedFileName2 = 'products-to-attributes.csv'
-  const expectedResult1 = 'name,type,attributeConstraint,isRequired,'
-    + 'isSearchable,label.en,label.de,textInputHint,displayGroup\nbreite,number'
-    + ',None,false,false,žluťoučký kůň úpěl ďábelské ódy,ě=ášéýřéý=čáěéžěížěé'
-    + ',SingleLine,Other\n'
-  const expectedResult2 = 'name,key,description,breite\ncustom-product-type,'
-    + 'productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
+  /* eslint-disable max-len */
+  const expectedResult1 =
+      'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
+    + 'breite,number,None,false,false,EN:žluťoučký kůň úpěl ďábelské ódy,DE:ě=ášéýřéý=čáěéžěížěé,SingleLine,Other\n'
+  const expectedResult2 = 'name,key,description,breite\n'
+    + 'custom-product-type,productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
-  const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,'
-    + 'isSearchable,label.en,label.de,textInputHint,'
-    + 'displayGroup\nbreite,number,None,false,false,'
-    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
-  const expectedEncoded2 = 'name,key,description,breite\ncustom-product-type,'
-    + 'productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
+  const expectedEncoded1 =
+    'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
+    + 'breite,number,None,false,false,EN:�lu�ou�k� k�� �p�l ��belsk� �dy,DE:�=�������=����������,SingleLine,Other\n'
+  const expectedEncoded2 = 'name,key,description,breite\n'
+    + 'custom-product-type,productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
+  /* eslint-enable max-len */
 
   try {
     await before()
@@ -99,23 +99,35 @@ test(`productType export module
       })
     })
 
-    const fileContent1 = fs.readFileSync(
-      path.join(OUTPUT_FOLDER, expectedFileName1))
-    const fileContent2 = fs.readFileSync(
-      path.join(OUTPUT_FOLDER, expectedFileName2))
+    const fileContent1 =
+      fs.readFileSync(path.join(OUTPUT_FOLDER, expectedFileName1))
+    const fileContent2 =
+      fs.readFileSync(path.join(OUTPUT_FOLDER, expectedFileName2))
 
     const decoded1 = iconv.decode(fileContent1, ENCODING)
     const decoded2 = iconv.decode(fileContent2, ENCODING)
 
-    t.equal(fileContent1.toString(), expectedEncoded1,
-      `Attributes should be encoded in ${ENCODING}`)
-    t.equal(fileContent2.toString(), expectedEncoded2,
-      `ProductType should be encoded in ${ENCODING}`)
+    t.equal(
+      fileContent1.toString(),
+      expectedEncoded1,
+      `Attributes should be encoded in ${ENCODING}`,
+    )
+    t.equal(
+      fileContent2.toString(),
+      expectedEncoded2,
+      `ProductType should be encoded in ${ENCODING}`,
+    )
 
-    t.equal(decoded1, expectedResult1,
-      'Attributes should decode back to utf8')
-    t.equal(decoded2, expectedResult2,
-      'ProductType should decode back to utf8')
+    t.equal(
+      decoded1,
+      expectedResult1,
+      'Attributes should decode back to utf8',
+    )
+    t.equal(
+      decoded2,
+      expectedResult2,
+      'ProductType should decode back to utf8',
+    )
     t.end()
   } catch (e) {
     t.end(e)
