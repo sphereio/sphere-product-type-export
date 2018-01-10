@@ -10,7 +10,8 @@ import path from 'path'
 import ProductTypeExport, { sortAttributes } from '../../src/product-type-export'
 import * as utils from '../utils'
 
-const mockProductTypes = utils.generateTestProductTypes()
+const mockProductTypesLength = 2
+const mockProductTypes = utils.generateTestProductTypes(mockProductTypesLength)
 const mockAttributes = utils.getMockAttributes(mockProductTypes)
 
 let client
@@ -51,6 +52,13 @@ test(`productType export module
           // check file
           const file = fs.readFileSync(downloadFile, { encoding: 'utf8' })
           const productTypes = JSON.parse(file)
+
+          t.equal(
+            productTypes.length,
+            mockProductTypesLength,
+            'All productTypes should be exported'
+          )
+
           const actualKeys = productTypes.map(({ key }) => key)
           const expectedKeys = mockProductTypes.map(({ key }) => key)
           expectedKeys.forEach((key) => {
