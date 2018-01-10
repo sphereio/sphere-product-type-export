@@ -79,7 +79,13 @@
     }
   },
   "eslintConfig": {
-    "extends": "commercetools"
+    "extends": "commercetools",
+    "rules": {
+      "prefer-promise-reject-errors": 0,
+      "comma-dangle": 0,
+      "function-paren-newline": 0,
+      "object-curly-newline": 0
+    }
   },
   "dependencies": {
     "JSONStream": "^1.1.2",

@@ -441,7 +441,8 @@ test(`productType export module
       productTypeExport.downloadProductTypes = () => Promise.reject(
         'some-error'
       )
-      productTypeExport.run()
+
+      return productTypeExport.run()
         .then(() => {
           const summary = JSON.parse(productTypeExport.summaryReport())
           t.deepEqual(summary.errors, ['some-error'], 'Error is present')
