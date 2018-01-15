@@ -1,36 +1,27 @@
 import 'babel-polyfill'
 import test from 'tape'
-import { SphereClient } from 'sphere-node-sdk'
 import fs from 'fs'
-import { randomBytes } from 'crypto'
 import glob from 'glob'
 import tempfile from 'tempfile'
 import path from 'path'
 import iconv from 'iconv-lite'
 
-import ProductTypeExport
-  from '../../src/product-type-export'
-import getSphereClientCredentials
-  from '../../src/sphere-client-credentials'
+import ProductTypeExport from '../../src/product-type-export'
+import * as utils from '../utils'
 
 const ENCODING = 'win1250'
-let PROJECT_KEY
-
-if (process.env.CI === 'true')
-  PROJECT_KEY = process.env.SPHERE_PROJECT_KEY
-else
-  PROJECT_KEY = process.env.npm_config_projectkey
+const PRODUCT_TYPE_KEY = 'productTypeKey'
 
 const createProductType = () => ({
-  key: randomBytes(8).toString('hex'),
+  key: PRODUCT_TYPE_KEY,
   name: 'custom-product-type',
   description: 'Some description - žluťoučký kůň úpěl ďábelské ódy',
   attributes: [
     {
       name: 'breite',
       label: {
-        de: 'ě=ášéýřéý=čáěéžěížěé',
-        en: 'žluťoučký kůň úpěl ďábelské ódy',
+        en: 'EN:žluťoučký kůň úpěl ďábelské ódy',
+        de: 'DE:ě=ášéýřéý=čáěéžěížěé',
       },
       type: {
         name: 'number',
@@ -43,74 +34,55 @@ const createProductType = () => ({
   ],
 })
 
-const deleteAll = (service, client) =>
-  client[service].process(({ body: { results } }) =>
-    Promise.all(results.map(productType =>
-      client[service].byId(productType.id)
-      .delete(productType.version)
-    ))
-  )
-
 let client
 let productTypeExport
-const testProductTypes = [createProductType()]
-const mockProductTypes = testProductTypes.map(type => ({
-  ...type, attributes: type.attributes.filter(a => !!a),
-}))
-
 let OUTPUT_FOLDER
 
-const before = function setup () {
+async function before () {
+  const clientConfig = await utils.getClientConfig()
+
+  client = await utils.getClient()
   OUTPUT_FOLDER = tempfile()
   fs.mkdirSync(OUTPUT_FOLDER)
-  return getSphereClientCredentials(PROJECT_KEY)
-    .then((sphereCredentials) => {
-      const options = {
-        config: sphereCredentials,
-      }
-      client = new SphereClient(options)
 
-      productTypeExport = new ProductTypeExport({
-        sphereClientConfig: options,
-        config: {
-          outputFolder: OUTPUT_FOLDER,
-          encoding: ENCODING,
-        },
-      })
-      return deleteAll('productTypes', client)
-      .then(() =>
-        Promise.all(mockProductTypes.map(productType =>
-          client.productTypes.create(productType)
-        ))
-      )
-    })
+  productTypeExport = new ProductTypeExport({
+    sphereClientConfig: {
+      config: clientConfig,
+    },
+    config: {
+      outputFolder: OUTPUT_FOLDER,
+      encoding: ENCODING,
+    },
+  })
+
+  await utils.deleteAll('productTypes', client)
+  return client.productTypes.create(createProductType())
 }
 
 test(`productType export module
   should output a product types and an attributes `
-  + `file using a ${ENCODING} encoding`, (t) => {
+  + `file using a ${ENCODING} encoding`, async (t) => {
   t.timeoutAfter(15000) // 15s
-
   const expectedFileName1 = 'attributes.csv'
   const expectedFileName2 = 'products-to-attributes.csv'
+  /* eslint-disable max-len */
+  const expectedResult1 =
+      'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
+    + 'breite,number,None,false,false,EN:žluťoučký kůň úpěl ďábelské ódy,DE:ě=ášéýřéý=čáěéžěížěé,SingleLine,Other\n'
+  const expectedResult2 = 'name,key,description,breite\n'
+    + 'custom-product-type,productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
-  const expectedResult1 = 'name,type,attributeConstraint,isRequired,'
-    + 'isSearchable,label.en,label.de,textInputHint,displayGroup\nbreite,number'
-    + ',None,false,false,žluťoučký kůň úpěl ďábelské ódy,ě=ášéýřéý=čáěéžěížěé'
-    + ',SingleLine,Other\n'
-  const expectedResult2 = 'name,description,breite\ncustom-product-type,'
-    + 'Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
+  const expectedEncoded1 =
+    'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
+    + 'breite,number,None,false,false,EN:�lu�ou�k� k�� �p�l ��belsk� �dy,DE:�=�������=����������,SingleLine,Other\n'
+  const expectedEncoded2 = 'name,key,description,breite\n'
+    + 'custom-product-type,productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
+  /* eslint-enable max-len */
 
-  const expectedEncoded1 = 'name,type,attributeConstraint,isRequired,'
-    + 'isSearchable,label.en,label.de,textInputHint,'
-    + 'displayGroup\nbreite,number,None,false,false,'
-    + '�lu�ou�k� k�� �p�l ��belsk� �dy,�=�������=����������,SingleLine,Other\n'
-  const expectedEncoded2 = 'name,description,breite\ncustom-product-type,'
-    + 'Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
-
-  before().then(() => productTypeExport.run())
-  .then(() =>
-    new Promise((resolve) => {
+  try {
+    await before()
+    await productTypeExport.run()
+    await new Promise((resolve) => {
       glob(path.join(OUTPUT_FOLDER, '*'), (err, files) => {
         t.equal(files.length, 2, 'files length is 2')
         t.equal(
@@ -126,27 +98,38 @@ test(`productType export module
         resolve()
       })
     })
-  )
-  .then(() => {
-    const fileContent1 = fs.readFileSync(
-      path.join(OUTPUT_FOLDER, expectedFileName1))
-    const fileContent2 = fs.readFileSync(
-      path.join(OUTPUT_FOLDER, expectedFileName2))
+
+    const fileContent1 =
+      fs.readFileSync(path.join(OUTPUT_FOLDER, expectedFileName1))
+    const fileContent2 =
+      fs.readFileSync(path.join(OUTPUT_FOLDER, expectedFileName2))
 
     const decoded1 = iconv.decode(fileContent1, ENCODING)
     const decoded2 = iconv.decode(fileContent2, ENCODING)
 
-    t.equal(fileContent1.toString(), expectedEncoded1,
-      `Attributes should be encoded in ${ENCODING}`)
-    t.equal(fileContent2.toString(), expectedEncoded2,
-      `ProductType should be encoded in ${ENCODING}`)
+    t.equal(
+      fileContent1.toString(),
+      expectedEncoded1,
+      `Attributes should be encoded in ${ENCODING}`,
+    )
+    t.equal(
+      fileContent2.toString(),
+      expectedEncoded2,
+      `ProductType should be encoded in ${ENCODING}`,
+    )
 
-    t.equal(expectedResult1, decoded1,
-      'Attributes should decode back to utf8')
-    t.equal(expectedResult2, decoded2,
-      'ProductType should decode back to utf8')
-
+    t.equal(
+      decoded1,
+      expectedResult1,
+      'Attributes should decode back to utf8',
+    )
+    t.equal(
+      decoded2,
+      expectedResult2,
+      'ProductType should decode back to utf8',
+    )
     t.end()
-  })
-  .catch(t.end)
+  } catch (e) {
+    t.end(e)
+  }
 })
