@@ -72,6 +72,12 @@ test(`productType export module
   const expectedResult2 = 'name,key,description,breite\n'
     + 'custom-product-type,productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
+    /*
+    * TODO
+    * use only one string when Node 10 LTS support kicks in October 2018
+    * remove support for Node v6
+    * remove the if(process.version[1])
+    */
   let expectedEncoded1 =
     'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
     + 'breite,number,None,false,false,EN:�lu�ou�k� k�� �p�l ��belsk� �dy,DE:�=�������=����������,SingleLine,Other\n'
