@@ -62,7 +62,7 @@ async function before () {
 test(`productType export module
   should output a product types and an attributes `
   + `file using a ${ENCODING} encoding`, async (t) => {
-  t.timeoutAfter(15000) // 15s
+  t.timeoutAfter(30000) // 30s
   const expectedFileName1 = 'attributes.csv'
   const expectedFileName2 = 'products-to-attributes.csv'
   /* eslint-disable max-len */
@@ -72,9 +72,20 @@ test(`productType export module
   const expectedResult2 = 'name,key,description,breite\n'
     + 'custom-product-type,productTypeKey,Some description - žluťoučký kůň úpěl ďábelské ódy,X\n'
 
-  const expectedEncoded1 =
+    /*
+    * TODO
+    * use only one string when Node 10 LTS support kicks in October 2018
+    * remove support for Node v6
+    * remove the if(process.version[1])
+    */
+  let expectedEncoded1 =
     'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
     + 'breite,number,None,false,false,EN:�lu�ou�k� k�� �p�l ��belsk� �dy,DE:�=�������=����������,SingleLine,Other\n'
+
+  if (process.version[1] >= 8)
+    expectedEncoded1 = 'name,type,attributeConstraint,isRequired,isSearchable,label.en,label.de,textInputHint,displayGroup\n'
+    + 'breite,number,None,false,false,EN:�lu�ou�k� k�� �p�l ��belsk� �dy,DE:�=������=��������,SingleLine,Other\n'
+
   const expectedEncoded2 = 'name,key,description,breite\n'
     + 'custom-product-type,productTypeKey,Some description - �lu�ou�k� k�� �p�l ��belsk� �dy,X\n'
   /* eslint-enable max-len */
