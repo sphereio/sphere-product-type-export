@@ -1,7 +1,7 @@
 {
   "name": "sphere-product-type-export",
   "version": "0.8.1",
-  "description": "",
+  "description": "Exports product types from the commercetools platform.",
   "main": "dist/index.js",
   "bin": {
     "product-type-export": "./bin/product-type-export"
@@ -28,7 +28,8 @@
     "ctp",
     "commercetools",
     "product-type",
-    "export"
+    "export",
+    "cli"
   ],
   "files": [
     "dist",
