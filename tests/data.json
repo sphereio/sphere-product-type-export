@@ -1,0 +1,124 @@
+[{
+    "name": "red",
+    "description": "red",
+    "classifier": "Complex",
+    "attributes": [
+        {
+          "name": "second",
+          "label": {
+            "de-DE": "second",
+            "en-US": ""
+          },
+          "inputTip": {
+            "de-DE": "second",
+            "en-US": ""
+          },
+          "isRequired": false,
+          "type": {
+            "name": "text"
+          },
+          "attributeConstraint": "None",
+          "isSearchable": false,
+          "inputHint": "SingleLine",
+          "displayGroup": "Other"
+        },
+        {
+          "name": "common",
+          "label": {
+            "de-DE": "common",
+            "en-US": ""
+          },
+          "inputTip": {
+            "de-DE": "common",
+            "en-US": ""
+          },
+          "isRequired": false,
+          "type": {
+            "name": "enum",
+            "values": [
+              {
+                "key": "aa",
+                "label": "aa"
+              },
+              {
+                "key": "ggfhfh",
+                "label": "fghghgfh"
+              }
+            ]
+          },
+          "attributeConstraint": "None",
+          "isSearchable": true,
+          "inputHint": "SingleLine",
+          "displayGroup": "Other"
+        }
+    ],
+    "key": "red"
+},
+{
+    "name": "green",
+    "description": "green",
+    "classifier": "Complex",
+    "attributes": [
+        {
+          "name": "green2",
+          "label": {
+            "de-DE": "green2",
+            "en-US": ""
+          },
+          "inputTip": {
+            "de-DE": "green2",
+            "en-US": ""
+          },
+          "isRequired": false,
+          "type": {
+            "name": "text"
+          },
+          "attributeConstraint": "None",
+          "isSearchable": false,
+          "inputHint": "SingleLine",
+          "displayGroup": "Other"
+        },
+        {
+          "name": "common",
+          "label": {
+            "de-DE": "common",
+            "en-US": ""
+          },
+          "inputTip": {
+            "de-DE": "common",
+            "en-US": ""
+          },
+          "isRequired": false,
+          "type": {
+            "name": "enum",
+            "values": [
+              {
+                "key": "aa",
+                "label": "aa"
+              },
+              {
+                "key": "vv",
+                "label": "vv"
+              },
+              {
+                "key": "dd",
+                "label": "dd"
+              },
+              {
+                "key": "fff",
+                "label": "ff"
+              },
+              {
+                "key": "rtr",
+                "label": "rttr"
+              }
+            ]
+          },
+          "attributeConstraint": "None",
+          "isSearchable": false,
+          "inputHint": "SingleLine",
+          "displayGroup": "Other"
+        }
+    ],
+    "key": "green"
+}]

@@ -13,6 +13,7 @@ import Writer from './io/writer'
 const debug = createDebug('product-type-export')
 
 const DEFAULT_ATTRIBUTES = [
+  'productType',
   'name',
   'type.name',
   'attributeConstraint',
@@ -137,7 +138,6 @@ const generateAttributeHeader = keys =>
 
     if (key.match(/inputHint/))
       return 'textInputHint'
-
     return key
   }))
 
@@ -163,6 +163,7 @@ export default class ProductTypeExport {
       exportFormat: 'csv',
       encoding: 'utf8',
       where: '',
+      includeProductTypeInAttributes: false
     })
 
     this.summary = {
@@ -204,19 +205,21 @@ export default class ProductTypeExport {
 
     return this.downloadProductTypes(downloadFile)
       .then(() => this.collectAttributes(downloadFile))
-      .then(({ attributeNames, attributeKeys }) => {
+      .then(({ attributeNames, attributeKeys, allAttributeKeys }) => {
         this.attributeNames = sortAttributes(attributeNames)
         this.attributeKeys = sortAttributes(attributeKeys)
+
+        this.allAttributeKeys = sortAttributes(allAttributeKeys)
         return this.collectTypesAndAttributes(downloadFile)
       })
-      .then(({ productTypes, attributes }) =>
+      .then(({ productTypes, attributesByProductType }) =>
         Promise.all([
           this.writeProductTypes(
             productTypes,
             path.join(outFolder, productAttributesFileName)
           ),
           this.writeAttributes(
-            attributes,
+            attributesByProductType,
             path.join(outFolder, attributesFileName)
           ),
         ])
@@ -285,6 +288,7 @@ export default class ProductTypeExport {
     return new Promise((resolve, reject) => {
       const attributeNames = []
       let attributeKeys = []
+      let allAttributeKeys = []
       const readStream = createReadStream(file)
       // pass [true] to get one product type at a time
       const productTypesInputStream = readStream.pipe(JSONStream.parse([true]))
@@ -292,21 +296,27 @@ export default class ProductTypeExport {
         const { attributes: typeAttributes } = productType
         // collect all attribute names that the product type contains
         typeAttributes.forEach((attr) => {
+          const newKeys = extractKeys(attr).filter(key =>
+            !attributeKeys.includes(key)
+          )
           if (!attributeNames.includes(attr.name)) {
             // push the name on the local cache to ignore duplicates
             attributeNames.push(attr.name)
             attributeKeys = [
-              ...extractKeys(attr).filter(key =>
-                !attributeKeys.includes(key)
-              ),
+              ...newKeys,
               ...attributeKeys,
             ]
           }
+          allAttributeKeys = [
+            ...newKeys,
+            ...allAttributeKeys,
+          ]
         })
       })
+
       productTypesInputStream.on('end', () => {
         debug('collected %s unique attributes', attributeNames.length)
-        resolve({ attributeNames, attributeKeys })
+        resolve({ attributeNames, attributeKeys, allAttributeKeys })
       })
       productTypesInputStream.on('error', reject)
     })
@@ -323,19 +333,24 @@ export default class ProductTypeExport {
   collectTypesAndAttributes (file) {
     const productTypesOutputStream = new Readable()
     const attributesOutputStream = new Readable()
-    const attributeNames = []
+    let attributeNames = []
     const readStream = createReadStream(file)
     // pass [true] to get one product type at a time
     const productTypesInputStream = readStream.pipe(JSONStream.parse([true]))
     productTypesInputStream.on('data', (productType) => {
       const { name, key, description, attributes: typeAttributes } = productType
       // collect all attribute names that the product type contains
+
+      // check duplicate within the product type if flag present
+      if (this.config.includeProductTypeInAttributes)
+        attributeNames = []
+
       const attrNames = typeAttributes.map((attr) => {
         // push all new attribute names to the store
         if (!attributeNames.includes(attr.name)) {
           attributeNames.push(attr.name)
           // push the attribute on the stream for later processing
-          attributesOutputStream.push(JSON.stringify(attr))
+          attributesOutputStream.push(JSON.stringify([name, attr]))
         }
         return attr.name
       })
@@ -358,7 +373,7 @@ export default class ProductTypeExport {
 
     return {
       productTypes: productTypesOutputStream.pipe(JSONStream.parse()),
-      attributes: attributesOutputStream.pipe(JSONStream.parse()),
+      attributesByProductType: attributesOutputStream.pipe(JSONStream.parse()),
     }
   }
 
@@ -388,7 +403,6 @@ export default class ProductTypeExport {
               return attributeInType ? 'X' : ''
             })
             const row = [name, key || '', description, ...enabledAttributes]
-
             writer
               .write([row])
               .catch(reject)
@@ -412,17 +426,23 @@ export default class ProductTypeExport {
         csvDelimiter: this.config.delimiter,
         outputFile: destination,
       })
-      const header = generateAttributeHeader(this.attributeKeys)
-      const keys = filterAttributeKeys(this.attributeKeys)
-      const numberOfRows = numberOfRowsForHeaders(this.attributeKeys)
+      const attributeKeys = this.config.includeProductTypeInAttributes ?
+        ['productType', ...this.allAttributeKeys] : this.attributeKeys
+      const header = generateAttributeHeader(attributeKeys)
+      const keys = filterAttributeKeys(attributeKeys)
+      const numberOfRows = numberOfRowsForHeaders(attributeKeys)
       const typeWithValuesRegex = /type.values.(.)/
       writer
         .setHeader(header)
         .then(() => {
-          stream.on('data', (attribute) => {
+          stream.on('data', ([type, attribute]) => {
             this.summary.exported.attributes += 1
             for (let i = 0; i < numberOfRows; i += 1) {
-              const row = keys.map((key) => {
+              const row = keys.map((key, count) => {
+                /* If the flag present then first column will be product type so
+                pushing product type value else ignore */
+                if (this.config.includeProductTypeInAttributes && count === 0)
+                  return type
                 // return enum fields if we are in the corresponding row
                 if (key.match(typeWithValuesRegex)) {
                   const val = getValueForKey(
@@ -442,7 +462,8 @@ export default class ProductTypeExport {
 
                 return null
               })
-              const rowIsEmpty = row.filter(r => !!r).length === 0
+              const rowIsEmpty = row.filter(Boolean).length === (
+                this.config.includeProductTypeInAttributes ? 1 : 0)
               if (!rowIsEmpty)
                 writer
                   .write([row])
