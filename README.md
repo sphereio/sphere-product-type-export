@@ -23,6 +23,7 @@ The configuration object may contain:
   - `exportFormat` (_optional_): output format, supported are `csv`, `xlsx` (_default_: `csv`)
   - `encoding` (_optional_): encoding used when saving data, supported encodings are listed [here](https://github.com/ashtuchkin/iconv-lite/wiki/Supported-Encodings) (_default_: `utf8`)
   - `where` (_optional_): where predicate used to filter exported productTypes. More info [here](http://dev.commercetools.com/http-api.html#predicates)
+  - `includeProductTypeInAttributes` (_optional_): flag to be used when all the attibutes need to be exported
 - `sphereClientConfig`: see the [sphere-node-sdk docs](http://sphereio.github.io/sphere-node-sdk/) for more information on this
 
 ## Usage

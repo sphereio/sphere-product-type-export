@@ -6,6 +6,7 @@ import fs from 'fs'
 import glob from 'glob'
 import tempfile from 'tempfile'
 import path from 'path'
+import productTypesJSON from '../data.json'
 // eslint-disable-next-line max-len
 import ProductTypeExport, { sortAttributes } from '../../src/product-type-export'
 import * as utils from '../utils'
@@ -21,7 +22,7 @@ let mockKeys = []
 
 let OUTPUT_FOLDER
 
-async function before () {
+async function before (productTypes) {
   sphereClientConfig = {
     config: await utils.getClientConfig(),
   }
@@ -35,9 +36,9 @@ async function before () {
     config: { outputFolder: OUTPUT_FOLDER },
   })
 
-  mockKeys = _.map(mockProductTypes, 'key')
+  mockKeys = _.map(productTypes || mockProductTypes, 'key')
   return utils.deleteAll('productTypes', client)
-    .return(mockProductTypes)
+    .return(productTypes || mockProductTypes)
     .map(productType => client.productTypes.create(productType))
 }
 
@@ -119,17 +120,17 @@ test(`productType export module
       const downloadFile = tempWrite.sync()
       productTypeExport.downloadProductTypes(downloadFile)
         .then(() => productTypeExport.collectTypesAndAttributes(downloadFile))
-        .then(({ productTypes, attributes }) => {
+        .then(({ productTypes, attributesByProductType }) => {
           const actualTypes = []
           const actualAttributes = []
           productTypes.on('data', (data) => {
             actualTypes.push(data)
           })
-          attributes.on('data', (data) => {
+          attributesByProductType.on('data', (data) => {
             actualAttributes.push(data)
           })
           productTypes.on('end', () => {
-            attributes.on('end', () => {
+            attributesByProductType.on('end', () => {
               mockProductTypes.forEach((
                 { name, key, description, attributes: typeAttrs }
               ) => {
@@ -150,7 +151,7 @@ test(`productType export module
                 // all of the types attributes should have been collected
                 typeAttrs.forEach((typeAttr) => {
                   const collectedAttribute = actualAttributes.some(
-                    attr => attr.name === typeAttr.name
+                    ([, attr]) => attr.name === typeAttr.name
                   )
                   t.ok(
                     collectedAttribute,
@@ -282,13 +283,15 @@ test(`productType export module
       const destination = tempWrite.sync(null, 'output.csv')
       productTypeExport.downloadProductTypes(download)
         .then(() => productTypeExport.collectAttributes(download))
-        .then(({ attributeNames, attributeKeys }) => {
+        .then(({ attributeNames, attributeKeys, }) => {
           productTypeExport.attributeNames = sortAttributes(attributeNames)
           productTypeExport.attributeKeys = sortAttributes(attributeKeys)
+          productTypeExport.allAttributeKeys = sortAttributes(attributeKeys)
           return productTypeExport.collectTypesAndAttributes(download)
         })
-        .then(({ attributes }) =>
-          productTypeExport.writeAttributes(attributes, destination)
+        .then(({ attributesByProductType }) =>
+          productTypeExport.writeAttributes(
+            attributesByProductType, destination)
         )
         .then(() => {
           const file = fs.readFileSync(destination, 'utf-8').split('\n')
@@ -347,6 +350,136 @@ test(`productType export module
               t.equal(
                 row[getColIndex('isSearchable')],
                 isSearchable,
+                `isSearchable flag ${isSearchable} is present`
+              )
+
+            let additionalRowsForValues = 0
+            // check if the type contains multiple values
+            if (
+              'values' in type ||
+          ('elementType' in type && 'values' in type.elementType)
+            ) {
+              const values = (type.values || type.elementType.values)
+              // store the number of rows needed for the current attributes
+              // according to the length of the list of values
+              additionalRowsForValues = values.length - 1
+              values.forEach((attrVal, index) => {
+                const valueRow = getRow(rowIndex + index)
+                // check for the enum key
+                t.equal(
+                  valueRow[getColIndex('enumKey')],
+                  attrVal.key,
+                  `enumKey ${attrVal.key} is equal`,
+                )
+                // check for enum label
+                if (typeof attrVal.label === 'object')
+                  return Object.keys(attrVal.label).forEach((locale) => {
+                    t.equal(
+                      valueRow[getColIndex(`enumLabel.${locale}`)],
+                      attrVal.label[locale],
+                      `enumLabel ${attrVal.label[locale]} is equal`,
+                    )
+                  })
+
+                return t.equal(
+                  valueRow[getColIndex('enumLabel')],
+                  attrVal.label,
+                  `enumLabel ${attrVal.label} is present`,
+                )
+              })
+            }
+            return rowIndex + additionalRowsForValues + 1
+          }, 1 /* start at 1 to skip the header row */)
+          t.end()
+        })
+    })
+      .catch(t.end)
+  })
+
+
+test(`productType export module
+  should write to all attributes with all properties to file
+  without removing duplicates across product types`, (t) => {
+    t.timeoutAfter(15000) // 15s
+    before(productTypesJSON).then(() => {
+      const download = tempWrite.sync()
+      const destination = tempWrite.sync(null, 'output.csv')
+      productTypeExport.config.includeProductTypeInAttributes = true
+      const productTypeAttributesMap = productTypesJSON.reduce(
+        (acc, productType) => ({
+          ...acc, [productType.name]: productType.attributes
+        }), {})
+      productTypeExport.downloadProductTypes(download)
+        .then(() => productTypeExport.collectAttributes(download))
+        .then(({ attributeNames, attributeKeys, }) => {
+          productTypeExport.attributeNames = sortAttributes(attributeNames)
+          productTypeExport.attributeKeys = sortAttributes(attributeKeys)
+          productTypeExport.allAttributeKeys = sortAttributes(attributeKeys)
+          return productTypeExport.collectTypesAndAttributes(download)
+        })
+        .then(({ attributesByProductType }) =>
+          productTypeExport.writeAttributes(
+            attributesByProductType, destination)
+        )
+        .then(() => {
+          const file = fs.readFileSync(destination, 'utf-8').split('\n')
+          const header = file[0].split(',')
+          const getColIndex = key => header.indexOf(key)
+          const getRow = index => file[index].split(',')
+          // check if all the product types have been exported
+          productTypeExport.attributeNames.reduce((rowIndex, attrName) => {
+            const row = getRow(rowIndex)
+            const attrDef = productTypeAttributesMap[row[0]].find(
+              mock => mock.name === attrName)
+            const {
+              name, type, label, attributeConstraint, inputHint, displayGroup,
+              isRequired, isSearchable,
+            } = attrDef
+
+            t.equal(row[1], name, `row ${name} is equal to name`)
+            // if the type is a set, element type of the set needs to appended
+            const typeName = type.name === 'set' ? `set:${
+              type.elementType.name
+            }` : type.name
+            t.equal(row[2], typeName, `attribute ${typeName} type is equal`)
+            // check for all the localizations of the label
+            Object.keys(label).forEach((locale) => {
+              t.equal(
+                row[getColIndex(`label.${locale}`)],
+                label[locale],
+                `locale ${label[locale]} is equal`
+              )
+            })
+            t.equal(
+              row[getColIndex('attributeConstraint')],
+              attributeConstraint,
+              `attributeConstraint ${attributeConstraint} is equal`
+            )
+            if (inputHint)
+              t.equal(
+                row[getColIndex('textInputHint')],
+                inputHint,
+                `inputHint ${inputHint} is equal`
+              )
+
+            if (displayGroup)
+              t.equal(
+                row[getColIndex('displayGroup')],
+                displayGroup,
+                `Display Group ${displayGroup} is equal`
+              )
+
+            if (isRequired)
+              t.equal(
+                row[getColIndex('isRequired')],
+                isRequired,
+                'isRequired flag is equal'
+              )
+
+            if (isSearchable)
+              t.equal(
+                row[getColIndex('isSearchable')],
+                `${isSearchable}`,
                 `isSearchable flag ${isSearchable} is present`
               )
 

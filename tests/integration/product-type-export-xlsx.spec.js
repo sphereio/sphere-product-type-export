@@ -109,15 +109,18 @@ test(`productType xlsx export module
       const {
         attributeNames,
         attributeKeys,
+        allAttributeKeys
       } = await productTypeExport.collectAttributes(productTypesFile)
 
       productTypeExport.attributeNames = sortAttributes(attributeNames)
       productTypeExport.attributeKeys = sortAttributes(attributeKeys)
+      productTypeExport.allAttributeKeys = sortAttributes(allAttributeKeys)
       const {
-        attributes,
+        attributesByProductType,
       } = await productTypeExport.collectTypesAndAttributes(productTypesFile)
 
-      await productTypeExport.writeAttributes(attributes, destination)
+      await productTypeExport.writeAttributes(
+        attributesByProductType, destination)
       const data = await readXlsx(destination)
       const header = data[0]
       const getColIndex = key => header.indexOf(key)
