@@ -48,6 +48,7 @@ Command accepts following arguments:
 - The `--delimiter` or `-d` parameter specifies what delimiter should be used when exporting to CSV (default is ',').
 - The `--compressOutput` or `-c` parameter specifies whether to archive export files after export is done (default is false). 
 - The `--encoding` parameter specifies in which encoding should be exported CSV files (default is utf8). 
+- The `includeProductTypeInAttributes` flag to be used when all the attibutes need to be exported.
 
 To export all productTypes in the CSV format we can run this command:
 ```bash
