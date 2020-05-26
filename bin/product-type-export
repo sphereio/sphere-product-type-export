@@ -18,6 +18,8 @@ var sphereHost = argv.sphereHost
 var sphereProtocol = argv.sphereProtocol
 var exportFormat = argv.exportFormat || 'csv'
 var encoding = argv.encoding || 'utf8'
+var includeProductTypeInAttributes = !!argv.includeProductTypeInAttributes
+
 
 if(!projectKey) {
   console.error('Use -p parameter to set a projectKey')
@@ -59,6 +61,7 @@ getCredentials()
       exportFormat: exportFormat,
       encoding: encoding,
       where: where,
+      includeProductTypeInAttributes: includeProductTypeInAttributes
     },
   })
 
