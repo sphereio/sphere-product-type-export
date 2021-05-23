@@ -92,7 +92,7 @@ const numberOfRowsForHeaders = headers =>
       return number > highest ? number : highest
     }, 0) + 1
 
-const filterAttributeKeys = keys =>
+const filterAttributeKeys = (keys, cb) =>
   filterDuplicates(keys.map(function mapKey (key) {
     if (key.match(/type\.values\.[0-9]+\.key/))
       return 'type.values.i.key'
@@ -109,7 +109,10 @@ const filterAttributeKeys = keys =>
     if (key.match(/type.elementType/)) {
       const regex = /type.elementType(.+)/
       const containedKey = regex.exec(key)[1]
-      return mapKey(`type${containedKey}`)
+      const outputKey = mapKey(`type${containedKey}`)
+      if (!keys.includes(outputKey))
+        cb(outputKey, key)
+      return outputKey
     }
     return key
   }))
@@ -150,7 +153,7 @@ export default class ProductTypeExport {
   constructor ({ sphereClientConfig, config = {} }) {
     this.client = new SphereClient(sphereClientConfig)
     this.attributeNames = []
-
+    this.attributeKeyMapping = {}
     if (!('outputFolder' in config))
       throw new Error(
         'Missing output folder. ' +
@@ -429,7 +432,9 @@ export default class ProductTypeExport {
       const attributeKeys = this.config.includeProductTypeInAttributes ?
         ['productType', ...this.allAttributeKeys] : this.attributeKeys
       const header = generateAttributeHeader(attributeKeys)
-      const keys = filterAttributeKeys(attributeKeys)
+      const keys = filterAttributeKeys(attributeKeys, (newKey, oldKey) => {
+        this.attributeKeyMapping[newKey] = oldKey
+      })
       const numberOfRows = numberOfRowsForHeaders(attributeKeys)
       const typeWithValuesRegex = /type.values.(.)/
       writer
@@ -445,9 +450,10 @@ export default class ProductTypeExport {
                   return type
                 // return enum fields if we are in the corresponding row
                 if (key.match(typeWithValuesRegex)) {
+                  const finalKey = key.replace(/\.i\./, `.${i}.`)
                   const val = getValueForKey(
                     attribute,
-                    key.replace(/\.i\./, `.${i}.`)
+                    this.attributeKeyMapping[finalKey] || finalKey
                   )
                   // only write strings to the csv file
                   // if the value is an object it is a localized label
@@ -458,7 +464,8 @@ export default class ProductTypeExport {
                 // only return "normal" values in the first row
                 // normal being the ones that are not lists like enum values
                 if (i === 0)
-                  return getValueForKey(attribute, key)
+                  return getValueForKey(attribute,
+                    this.attributeKeyMapping[key] || key)
 
                 return null
               })
