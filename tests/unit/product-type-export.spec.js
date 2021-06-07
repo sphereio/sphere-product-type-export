@@ -15,8 +15,10 @@ const options = {
   sphereClientConfig: {
     config: {
       project_key: PROJECT_KEY,
-      client_id: '*********',
-      client_secret: '*********',
+      client_id: process.env.CI === true ?
+        process.env.SPHERE_CLIENT_ID : '*********',
+      client_secret: process.env.CI === true ?
+        process.env.SPHERE_CLIENT_SECRET : '*********',
     },
     rest: {
       config: {},
